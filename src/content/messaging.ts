@@ -65,6 +65,10 @@ export const api = {
   lookupVi,
   collocations,
   addCard,
+  blockSite: async (): Promise<Result> => {
+    const r = await send<unknown>({ type: 'blockSite' });
+    return isObject(r) && typeof r.ok === 'boolean' && typeof r.msg === 'string' ? (r as unknown as Result) : { ok: false, msg: 'No answer from the extension.' };
+  },
   speak: (text: string) => send<undefined>({ type: 'speak', text }),
 };
 

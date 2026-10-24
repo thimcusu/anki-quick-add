@@ -75,6 +75,11 @@ test('phrase fallback entries are validated', () => {
   assert.ok(!isFallbackEntry({ ...gt, s: 'sk' }));
 });
 
+test('blockSite takes no data from the page', () => {
+  assert.equal(isRequest({ type: 'blockSite' }), true);
+  assert.equal(isRequest({ type: 'blockSite', site: 'evil.com' }), false);
+});
+
 test('page requests are separate from content requests', () => {
   assert.equal(isPageRequest({ type: 'getLogs' }), true);
   assert.equal(isRequest({ type: 'getLogs' }), false);
@@ -83,9 +88,9 @@ test('page requests are separate from content requests', () => {
 
 test('settings: tags and normalization', () => {
   assert.deepEqual(parseTags(' anki-web, my tag ,, <b>x</b>, anki-web'), ['anki-web', 'my_tag', 'bxb']);
-  assert.deepEqual(normalizeSettings(null), { enabled: true, mouse: true, deck: 'Web', tags: ['anki-web'], inspect: false,
-    blocklist: ['git.example.com', 'rancher.example.com', 'db.example.org'] });
-  assert.equal(normalizeSettings({ deck: 42, enabled: 'yes' }).deck, 'Web');
+  assert.deepEqual(normalizeSettings(null), { enabled: true, mouse: true, deck: 'English', tags: ['anki-quick-add'], inspect: false, blocklist: [] });
+  assert.equal(normalizeSettings({ deck: 42, enabled: 'yes' }).deck, 'English');
+  assert.deepEqual(normalizeSettings({ deck: 'Web', blocklist: ['https://Chat.Example.com/', 'bad site'] }).blocklist, ['chat.example.com']);
 });
 
 test('containsWord accepts inflections, rejects misspellings', () => {
@@ -109,7 +114,7 @@ test('Oxford fallback entry validation', async () => {
 });
 
 test('blocklist patterns', async () => {
-  const { isBlocked, normalizePattern, parseBlocklist, siteOf, DEFAULT_BLOCKLIST } = await import('../src/shared/blocklist.ts');
+  const { isBlocked, normalizePattern, parseBlocklist, siteOf } = await import('../src/shared/blocklist.ts');
   assert.equal(normalizePattern('https://rancher.example.com/'), 'rancher.example.com');
   assert.equal(normalizePattern('http://db.example.org/'), 'db.example.org');
   assert.equal(normalizePattern('  Example.com/Chat/?x=1#y '), 'example.com/chat');
@@ -117,7 +122,7 @@ test('blocklist patterns', async () => {
   assert.equal(normalizePattern('not a site'), null);
   assert.equal(normalizePattern('javascript:alert(1)'), null);
   assert.deepEqual(parseBlocklist('a.com\n\nA.com, b.com/x'), ['a.com', 'b.com/x']);
-  const L = DEFAULT_BLOCKLIST;
+  const L = ['git.example.com', 'rancher.example.com', 'db.example.org'];
   assert.equal(isBlocked('https://git.example.com/projects/X/repos', L), true);
   assert.equal(isBlocked('https://rancher.example.com/dashboard', L), true);
   assert.equal(isBlocked('http://db.example.org/', L), true);

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0 — 2026-10-24
+
+- **Turn off on this site from the bubble** (⊘ → confirm). The site is added to the blocklist; undo from the toolbar popup or the options page.
+- **Dictionary build pipeline** `npm run dict` (scripts/dict/build_dict.py): sources in `dictionaries.json` (open dictionaries, downloaded on first run) plus your own files in `dictionaries.local.json` (Lingoes `.ld2`, Yomitan `.zip`, TSV). Word families from the `wordnet-db` npm package.
+- **Release packaging** `npm run package`: store/GitHub zip built only from shareable dictionary sources, without source maps.
+- Fresh-install defaults moved to `src/shared/defaults.ts` (deck `English`, tag `anki-quick-add`, empty blocklist). Existing settings are kept. The `needs-fill` tag is no longer added automatically — add it to *Tags* if you use it.
+- Icons, `.npmrc` (public npm registry), MIT licence, privacy policy, Chrome Web Store kit (`store/`, `PUBLISHING.md`).
+- README in Vietnamese (default) and English: install, Anki setup, usage, studying with Anki, custom note types, dictionaries.
+
 ## 1.0.0 — 2026-10-24
 
 First tagged release (was 3.6.1 during development).

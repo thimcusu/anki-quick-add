@@ -85,6 +85,7 @@ export type ContentRequest =
   | { type: 'translate'; texts: string[] }
   | { type: 'addCard'; card: CardDraft }
   | { type: 'speak'; text: string }
+  | { type: 'blockSite' } // add the sender tab's site to the blocklist
   | { type: 'log'; level: LogLevel; event: string; detail: string };
 
 /** Messages from the extension's own pages (popup, options). */

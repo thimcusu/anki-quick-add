@@ -1,7 +1,9 @@
 // Service worker: routes validated messages. Content scripts (inside web pages)
 // and the extension's own pages (popup, options) get different, separate APIs.
 import { isContentRequest, isPageRequest } from '../shared/validate.ts';
-import type { ContentRequest, PageRequest } from '../shared/types.ts';
+import type { ContentRequest, PageRequest, Result } from '../shared/types.ts';
+import { isBlocked, siteOf } from '../shared/blocklist.ts';
+import { loadSettings, saveSettings } from '../shared/settings.ts';
 import { lookupEn, lookupVi } from './dictionary.ts';
 import { fetchCollocations } from './collocations.ts';
 import { fetchOxford, translateToVi } from './online.ts';
@@ -9,7 +11,7 @@ import { addCard } from './card.ts';
 import { anki, AnkiError } from './anki.ts';
 import { clearLogs, getLogs, log } from './log.ts';
 
-function handleContent(msg: ContentRequest): Promise<unknown> | undefined {
+function handleContent(msg: ContentRequest, tabUrl: string): Promise<unknown> | undefined {
   switch (msg.type) {
     case 'lookupEn': return lookupEn(msg.word);
     case 'lookupVi': return lookupVi(msg.phrases);
@@ -17,6 +19,7 @@ function handleContent(msg: ContentRequest): Promise<unknown> | undefined {
     case 'oxford': return fetchOxford(msg.word);
     case 'translate': return translateToVi(msg.texts);
     case 'addCard': return addCard(msg.card);
+    case 'blockSite': return blockSite(tabUrl);
     case 'speak':
       void chrome.tts.speak(msg.text, { lang: 'en-US' });
       return undefined;
@@ -24,6 +27,16 @@ function handleContent(msg: ContentRequest): Promise<unknown> | undefined {
       log(msg.level, `content: ${msg.event}`, msg.detail);
       return undefined;
   }
+}
+
+/** "Turn off on this site" from the bubble. The site comes from the tab's real URL, never from the page. */
+async function blockSite(tabUrl: string): Promise<Result> {
+  const site = siteOf(tabUrl);
+  if (!site) return { ok: false, msg: 'This page can\'t be blocked.' };
+  const s = await loadSettings();
+  if (!isBlocked(tabUrl, s.blocklist)) await saveSettings({ blocklist: [...s.blocklist, site] });
+  log('info', 'blocked site', site);
+  return { ok: true, msg: site };
 }
 
 async function deckNames(): Promise<{ ok: true; decks: string[] } | { ok: false; msg: string }> {
@@ -53,7 +66,7 @@ chrome.runtime.onMessage.addListener((msg: unknown, sender, reply) => {
   if (fromExtensionPage && isPageRequest(msg)) {
     pending = handlePage(msg);
   } else if (!fromExtensionPage && sender.tab && isContentRequest(msg)) {
-    pending = handleContent(msg);
+    pending = handleContent(msg, sender.tab.url ?? '');
   } else {
     log('error', 'rejected message', { from: sender.tab ? 'tab' : sender.url, type: (msg as { type?: unknown } | null)?.type });
     reply({ ok: false, msg: 'Invalid request.' });

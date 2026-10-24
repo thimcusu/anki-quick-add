@@ -56,6 +56,8 @@ export function isContentRequest(v: unknown): v is ContentRequest {
     case 'oxford':
     case 'collocations':
       return str(v.word, MAX_WORD) && v.word.length > 0;
+    case 'blockSite':
+      return Object.keys(v).length === 1;
     case 'speak':
       return str(v.text, 300);
     case 'lookupVi':

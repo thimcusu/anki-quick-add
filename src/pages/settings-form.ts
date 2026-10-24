@@ -74,7 +74,7 @@ export async function renderSettings(root: HTMLElement, page: 'popup' | 'options
     deck.value = s.deck;
   }, () => { status.className = 'status err'; status.textContent = 'Could not reach the extension.'; });
 
-  const tags = el('input', { type: 'text', value: s.tags.join(', '), placeholder: 'anki-web, english' });
+  const tags = el('input', { type: 'text', value: s.tags.join(', '), placeholder: 'english, vocabulary' });
   tags.addEventListener('change', () => {
     const list = parseTags(tags.value);
     tags.value = list.join(', ');

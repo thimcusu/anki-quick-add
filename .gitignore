@@ -1,9 +1,13 @@
 node_modules/
 dist/
 dist-test/
+release/
 *.crx
 *.pem
 .DS_Store
-# Dictionary data: built locally, not redistributed (see README → Data sources)
+# Dictionary data: built locally with `npm run dict` (see README)
+.cache/
 data/
 resources/
+dictionaries/
+dictionaries.local.json

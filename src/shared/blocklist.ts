@@ -5,11 +5,9 @@
 //   https://example.com/   full URLs are accepted and reduced to host (+ path)
 //   192.168.1.10:8080      hosts with a port
 
-export const DEFAULT_BLOCKLIST = [
-  'git.example.com',
-  'rancher.example.com',
-  'db.example.org',
-];
+import { DEFAULTS } from './defaults.ts';
+
+export const DEFAULT_BLOCKLIST: string[] = DEFAULTS.blocklist;
 
 const MAX_PATTERNS = 200;
 

@@ -1,0 +1,51 @@
+{
+  "_comment": "Dictionary sources for `npm run dict`. Earlier sources win; technical sources only add a 'Technical' section. Put your own files in dictionaries/ and list them in dictionaries.local.json (same format, not committed) — see README.",
+  "en-vi": [
+    {
+      "name": "skypediacode English-Vietnamese",
+      "type": "skypediacode-sqlite",
+      "url": "https://raw.githubusercontent.com/skypediacode/english-vietnamese-dictionary/main/dictionary_en_vi.db",
+      "license": "CC BY-SA 4.0",
+      "home": "https://github.com/skypediacode/english-vietnamese-dictionary"
+    }
+  ],
+  "vi-en": [
+    {
+      "name": "OVDP Vietnamese-English",
+      "type": "yomitan", "style": "definitions",
+      "url": "https://raw.githubusercontent.com/thu-tram/viet-yomitan/main/dictionaries/ovdp-vi-en-v2.zip",
+      "home": "https://github.com/thu-tram/viet-yomitan"
+    },
+    {
+      "name": "Hồ Ngọc Đức Vietnamese-English",
+      "type": "yomitan", "style": "definitions",
+      "url": "https://raw.githubusercontent.com/thu-tram/viet-yomitan/main/dictionaries/dictd_viet-anh.zip",
+      "home": "https://www.informatik.uni-leipzig.de/~duc/Dict/"
+    },
+    {
+      "name": "VNEDICT",
+      "type": "yomitan", "style": "words",
+      "url": "https://raw.githubusercontent.com/thu-tram/viet-yomitan/main/dictionaries/vnedict-v4.zip",
+      "home": "https://github.com/thu-tram/viet-yomitan"
+    },
+    {
+      "name": "Apple Vietnamese-English (licence unclear — personal use)",
+      "enabled": false,
+      "type": "yomitan", "style": "words",
+      "url": "https://raw.githubusercontent.com/thu-tram/viet-yomitan/main/dictionaries/apple-vi-en.zip"
+    },
+    {
+      "name": "Babylon Vietnamese-English (licence unclear — personal use)",
+      "enabled": false,
+      "type": "yomitan", "style": "babylon",
+      "url": "https://raw.githubusercontent.com/thu-tram/viet-yomitan/main/dictionaries/babylon-vi-en-v2.zip"
+    },
+    {
+      "name": "SPDict Vietnamese-English (adds technical terms)",
+      "enabled": false,
+      "type": "yomitan", "style": "spdict",
+      "url": "https://raw.githubusercontent.com/thu-tram/viet-yomitan/main/dictionaries/spdict-viet-anh.zip"
+    }
+  ],
+  "forms": { "type": "wordnet", "dir": "node_modules/wordnet-db/dict" }
+}

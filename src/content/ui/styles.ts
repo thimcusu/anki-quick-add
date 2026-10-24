@@ -41,6 +41,7 @@ button { font: inherit; cursor: pointer; color: inherit; background: none; borde
 .btn:disabled { opacity: .45; cursor: default; }
 .icon { padding: 2px 6px; border-radius: 6px; color: var(--muted); }
 .icon:hover { background: var(--surface); color: var(--text); }
+.actions { display: inline-flex; gap: 2px; }
 .link { color: var(--accent-text); font-size: 12px; padding: 0; }
 .link:hover { text-decoration: underline; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }

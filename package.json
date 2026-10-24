@@ -1,12 +1,14 @@
 {
   "name": "anki-quick-add",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Double-click English or Vietnamese words on any page and add English vocabulary to Anki.",
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
     "build:data": "node scripts/build.mjs --data",
+    "dict": "python3 scripts/dict/build_dict.py",
+    "package": "node scripts/package.mjs",
     "watch": "node scripts/build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
@@ -22,6 +24,7 @@
     "eslint": "9.39.1",
     "eslint-plugin-no-unsanitized": "4.1.5",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.72.0"
+    "typescript-eslint": "8.72.0",
+    "wordnet-db": "3.1.14"
   }
 }

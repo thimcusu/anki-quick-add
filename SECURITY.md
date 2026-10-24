@@ -16,8 +16,8 @@ The content script runs inside every web page you visit, so the page is treated 
 | Settings tampering | Settings live in `chrome.storage.sync` (not reachable by web pages) and are re-validated on every read (`normalizeSettings`): deck length-limited, tags reduced to letters/digits/`_:-.` |
 | Popup/options messages from web pages | Page-only requests (`deckNames`, `getLogs`, `clearLogs`) are accepted only from the extension's own origin; content scripts get a separate, smaller API |
 | Over-broad permissions | Only `activeTab` (popup reads the current tab's URL for the per-site switch, only when you click the icon), `storage` and `tts`; host access only to `127.0.0.1:8765` (AnkiConnect), `ozdic.com`, `www.oxfordlearnersdictionaries.com` and `translate.googleapis.com` (fallback for unknown words) and `translate.google.com` (pronunciation audio, downloaded by the extension and handed to Anki as data, size-capped); no cookies sent; content script only on http/https pages |
-| Oxford fallback data sent with a card | Re-validated in the service worker (`isFallbackEntry`: exact shape, item/length caps); the audio URL must match the Oxford media URL pattern; all text escaped into fields |
-| Sites where the extension must not run (company tools, chats) | Blocklist checked by the content script before any listener acts (`isBlocked`, unit-tested: host + subdomains, `*.` wildcard, path prefix, port); patterns normalized and validated on save |
+| Online entries sent with a card (Oxford fallback, Google-translated phrase) | Re-validated in the service worker (`isFallbackEntry`: exact shape, item/length caps; phrase entries may not carry forms or Oxford data); the audio URL must match the Oxford media URL pattern; all text escaped into fields |
+| Sites where the extension must not run (company tools, chats) | Blocklist checked by the content script before any listener acts (`isBlocked`, unit-tested: host + subdomains, `*.` wildcard, path prefix, port); patterns normalized and validated on save. The bubble's ⊘ sends a `blockSite` message with **no data**: the service worker takes the site from the sender tab's real URL, so a page can't add other sites |
 | Card templates | The note type's only script is a fixed play-button handler (`new Audio(data-src)`); all field content is escaped/sanitized, so no page text can become markup or script on the card |
 | Code injection in extension pages | Manifest CSP `script-src 'self'; object-src 'none'; base-uri 'none'`; no `eval`/`new Function` (lint-enforced) |
 | Vulnerable dependencies | Dev-only dependencies, pinned versions; `npm audit` → 0 vulnerabilities. Nothing from npm ships in `dist/` except esbuild's bundle of our own code |
@@ -31,5 +31,7 @@ npm run security   # npm audit + lint
 
 ## Known trade-offs
 
-- Pronunciation audio uses Google Translate's TTS URL; Anki downloads it, and the bubble's 🔊 plays it from the page.
+- Pronunciation audio uses Google Translate's TTS URL: the service worker downloads it for Anki, and the bubble's 🔊 plays it from the page (the browser may send the page's origin as Referer).
+- Google Translate and Oxford endpoints are unofficial for this use and may change or rate-limit.
+- Dictionary build (`npm run dict`) downloads sources over HTTPS from fixed URLs in `dictionaries.json`; review `dictionaries.local.json` entries you add.
 - Collocations require network access to ozdic.com; the HTML structure of that site can change.

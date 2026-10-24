@@ -1,5 +1,6 @@
 // User settings, stored in chrome.storage.sync (synced across the user's Chrome profiles).
 import { DEFAULT_BLOCKLIST, parseBlocklist } from './blocklist.ts';
+import { DEFAULTS } from './defaults.ts';
 
 export interface Settings {
   enabled: boolean; // master switch
@@ -13,8 +14,8 @@ export interface Settings {
 export const DEFAULT_SETTINGS: Settings = {
   enabled: true,
   mouse: true,
-  deck: 'Web',
-  tags: ['anki-web'],
+  deck: DEFAULTS.deck,
+  tags: DEFAULTS.tags,
   inspect: false,
   blocklist: DEFAULT_BLOCKLIST,
 };

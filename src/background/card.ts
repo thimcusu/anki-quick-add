@@ -177,8 +177,8 @@ export async function addCard(draft: CardDraft): Promise<Result> {
       deckName: deck,
       modelName: MODEL_NAME,
       fields,
-      // "needs-fill" lets Claude find cards to complete; "from-vi" marks cards picked on Vietnamese pages.
-      tags: [...settings.tags, 'needs-fill', ...(draft.seenAs ? ['from-vi'] : [])],
+      // "from-vi" marks cards picked on Vietnamese pages.
+      tags: [...new Set([...settings.tags, ...(draft.seenAs ? ['from-vi'] : [])])],
       options: { allowDuplicate: false, duplicateScope: 'collection' },
     };
 
