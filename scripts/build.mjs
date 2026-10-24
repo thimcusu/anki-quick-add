@@ -18,7 +18,7 @@ const testBuild = args.has('--test'); // e2e build: open shadow root so tests ca
 const dist = option('out') ?? join(root, testBuild ? 'dist-test' : 'dist'); // --out=<dir> (used by package.mjs)
 
 mkdirSync(dist, { recursive: true });
-for (const file of ['manifest.json', 'popup.html', 'options.html', 'page.css', 'icons']) {
+for (const file of ['manifest.json', 'popup.html', 'options.html', 'sandbox.html', 'offscreen.html', 'page.css', 'icons']) {
   cpSync(join(root, 'static', file), join(dist, file), { recursive: true });
 }
 
@@ -38,6 +38,8 @@ const options = {
     content: join(root, 'src', 'content', 'index.ts'),
     popup: join(root, 'src', 'pages', 'popup.ts'),
     options: join(root, 'src', 'pages', 'options.ts'),
+    sandbox: join(root, 'src', 'sandbox', 'index.ts'),
+    offscreen: join(root, 'src', 'offscreen', 'index.ts'),
   },
   outdir: dist,
   bundle: true,

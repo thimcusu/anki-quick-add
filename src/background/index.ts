@@ -8,6 +8,8 @@ import { lookupEn, lookupVi } from './dictionary.ts';
 import { fetchCollocations } from './collocations.ts';
 import { fetchOxford, translateToVi } from './online.ts';
 import { addCard } from './card.ts';
+import { lookupScripts, runScript, scriptFetch } from './scripts.ts';
+import { loadLocal } from '../shared/local-settings.ts';
 import { anki, AnkiError } from './anki.ts';
 import { clearLogs, getLogs, log } from './log.ts';
 
@@ -16,6 +18,7 @@ function handleContent(msg: ContentRequest, tabUrl: string): Promise<unknown> | 
     case 'lookupEn': return lookupEn(msg.word);
     case 'lookupVi': return lookupVi(msg.phrases);
     case 'collocations': return fetchCollocations(msg.word);
+    case 'lookupScripts': return lookupScripts(msg.word);
     case 'oxford': return fetchOxford(msg.word);
     case 'translate': return translateToVi(msg.texts);
     case 'addCard': return addCard(msg.card);
@@ -47,9 +50,28 @@ async function deckNames(): Promise<{ ok: true; decks: string[] } | { ok: false;
   }
 }
 
+/** Options → Anki: connection status, AnkiConnect version, decks and note types. */
+async function ankiInfo(): Promise<{ ok: true; version: number; decks: string[]; models: string[] } | { ok: false; msg: string }> {
+  try {
+    const [version, decks, models] = await Promise.all([anki<number>('version'), anki<string[]>('deckNames'), anki<string[]>('modelNames')]);
+    return { ok: true, version, decks: decks.sort((a, b) => a.localeCompare(b)), models: models.sort((a, b) => a.localeCompare(b)) };
+  } catch (e) {
+    return { ok: false, msg: e instanceof AnkiError ? e.message : 'Could not reach Anki.' };
+  }
+}
+
+async function testScript(scriptId: string, word: string): Promise<unknown> {
+  const script = (await loadLocal()).scripts.find((s) => s.id === scriptId);
+  return script ? runScript(script, word) : { ok: false, error: 'Save the script first.' };
+}
+
 function handlePage(msg: PageRequest): Promise<unknown> {
   switch (msg.type) {
     case 'deckNames': return deckNames();
+    case 'ankiInfo': return ankiInfo();
+    case 'modelFieldNames': return anki<string[]>('modelFieldNames', { modelName: msg.model }).then((fields) => ({ ok: true, fields }), (e: unknown) => ({ ok: false, msg: e instanceof AnkiError ? e.message : 'Could not reach Anki.' }));
+    case 'scriptFetch': return scriptFetch(msg.scriptId, msg.url);
+    case 'testScript': return testScript(msg.scriptId, msg.word);
     case 'getLogs': return getLogs();
     case 'clearLogs': return clearLogs().then(() => true);
   }

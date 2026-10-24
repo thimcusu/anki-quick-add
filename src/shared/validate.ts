@@ -32,9 +32,18 @@ export function isFallbackEntry(v: unknown): v is EnEntry & { head: string } {
   return groupsOk && familyOk && oxOk;
 }
 
+/** Script results carried by a card: plain text in the same small shape as scriptEntry() produces. */
+export function isScriptSections(v: unknown): boolean {
+  return Array.isArray(v) && v.length <= 5 && v.every((x) => isObj(x) && str(x.name, 80) && isObj(x.entry) && x.entry.s === 'sc' &&
+    str(x.entry.head, MAX_WORD) && str(x.entry.i, 100) && Array.isArray(x.entry.g) && x.entry.g.length <= 6 &&
+    x.entry.g.every((g) => isObj(g) && str(g.p, 40) && strList(g.m, 10, 500) && (g.x === undefined || strList(g.x, 3, 300))) &&
+    Object.keys(x.entry).every((k) => ['s', 'head', 'i', 'g'].includes(k)));
+}
+
 export function isCardDraft(v: unknown): v is CardDraft {
   if (!isObj(v)) return false;
   if (v.fallback !== undefined && !isFallbackEntry(v.fallback)) return false;
+  if (v.extra !== undefined && !isScriptSections(v.extra)) return false;
   return str(v.front, 200) && v.front.trim().length > 0 && str(v.word, MAX_WORD) && v.word.trim().length > 0 &&
     str(v.ipa, 100) && str(v.pos, 40) && str(v.answer, 300) && isForms(v.forms) &&
     str(v.sentenceHtml) && str(v.pageUrl) && str(v.pageTitle, 300) &&
@@ -42,7 +51,14 @@ export function isCardDraft(v: unknown): v is CardDraft {
 }
 
 export function isPageRequest(v: unknown): v is PageRequest {
-  return isObj(v) && (v.type === 'deckNames' || v.type === 'getLogs' || v.type === 'clearLogs');
+  if (!isObj(v)) return false;
+  switch (v.type) {
+    case 'deckNames': case 'getLogs': case 'clearLogs': case 'ankiInfo': return true;
+    case 'modelFieldNames': return str(v.model, 200);
+    case 'scriptFetch': return str(v.scriptId, 40) && str(v.url, 2000);
+    case 'testScript': return str(v.scriptId, 40) && str(v.word, MAX_WORD);
+    default: return false;
+  }
 }
 
 export function isContentRequest(v: unknown): v is ContentRequest {
@@ -53,6 +69,7 @@ export function isContentRequest(v: unknown): v is ContentRequest {
     case 'translate':
       return strList(v.texts, 10, 500);
     case 'lookupEn':
+    case 'lookupScripts':
     case 'oxford':
     case 'collocations':
       return str(v.word, MAX_WORD) && v.word.length > 0;

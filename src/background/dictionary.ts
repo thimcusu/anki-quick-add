@@ -1,6 +1,8 @@
 // Offline dictionary lookups. Data lives in dist/dict/{en,vi}/<xx>.json,
 // sharded by the first two (unaccented) letters so a lookup loads one file.
-import type { EnEntry, EnLookup, ViEntry, ViLookup } from '../shared/types.ts';
+import type { DictSection, EnEntry, EnLookup, ViEntry, ViLookup } from '../shared/types.ts';
+import { BUILTIN, type Direction, loadLocal, orderedDicts } from '../shared/local-settings.ts';
+import { getEntry, listDicts } from '../shared/dictdb.ts';
 
 type Shard<T> = Record<string, T>;
 const MAX_CACHED_SHARDS = 40;
@@ -55,7 +57,39 @@ export function lemmaCandidates(input: string): string[] {
   return out;
 }
 
-export async function lookupEn(word: string): Promise<EnLookup> {
+// ---------- dictionaries chosen by the user (built-in + imported, in order) ----------
+
+interface Source { id: string; name: string }
+let sourcesCache: Promise<Record<Direction, Source[]>> | null = null;
+let watching = false;
+
+/** Enabled dictionaries per direction, in the user's order (scripts are handled in scripts.ts). */
+export function dictionarySources(): Promise<Record<Direction, Source[]>> {
+  if (!watching) {
+    watching = true;
+    chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local' && 'dicts' in changes) sourcesCache = null; });
+  }
+  sourcesCache ??= (async () => {
+    const [local, imported] = await Promise.all([loadLocal(), listDicts().catch(() => [])]);
+    const ids = [BUILTIN, ...imported.map((d) => d.id)];
+    const out: Record<Direction, Source[]> = { 'en-vi': [], 'vi-en': [] };
+    for (const ref of orderedDicts(local.dicts, ids)) {
+      if (!ref.enabled) continue;
+      if (ref.id === BUILTIN) { out['en-vi'].push({ id: BUILTIN, name: 'Built-in' }); out['vi-en'].push({ id: BUILTIN, name: 'Built-in' }); continue; }
+      const d = imported.find((x) => x.id === ref.id);
+      if (d) out[d.direction].push({ id: d.id, name: d.name });
+    }
+    return out;
+  })();
+  return sourcesCache;
+}
+
+async function find<T extends EnEntry | ViEntry>(source: Source, lang: 'en' | 'vi', key: string): Promise<T | undefined> {
+  return source.id === BUILTIN ? get<T>(lang, key) : getEntry<T>(source.id, key).catch(() => undefined);
+}
+
+/** The built-in entry only (word family, IPA and examples of other forms). */
+export async function lookupBuiltin(word: string): Promise<EnLookup> {
   for (const candidate of lemmaCandidates(word)) {
     const entry = await get<EnEntry>('en', candidate);
     if (entry) return { found: true, head: candidate, ...entry };
@@ -63,11 +97,41 @@ export async function lookupEn(word: string): Promise<EnLookup> {
   return { found: false, head: word.toLowerCase() };
 }
 
-/** `phrases` are Vietnamese phrases around the click, longest first. */
+/**
+ * English → Vietnamese in every enabled dictionary. The first dictionary that
+ * knows the word is the main entry; `sections` has one item per dictionary.
+ * The word family always comes from the built-in data (WordNet).
+ */
+export async function lookupEn(word: string): Promise<EnLookup> {
+  const sources = (await dictionarySources())['en-vi'];
+  const sections: DictSection[] = [];
+  for (const source of sources) {
+    for (const candidate of lemmaCandidates(word)) {
+      const entry = await find<EnEntry>(source, 'en', candidate);
+      if (entry) { sections.push({ id: source.id, name: source.name, entry: { ...entry, head: candidate } }); break; }
+    }
+  }
+  const main = sections[0];
+  if (!main) return { found: false, head: word.toLowerCase() };
+  const family = main.entry.f ?? (await get<EnEntry>('en', main.entry.head))?.f;
+  return { found: true, ...main.entry, ...(family ? { f: family } : {}), sections };
+}
+
+/** `phrases` are Vietnamese phrases around the click, longest first. Results of all dictionaries are merged. */
 export async function lookupVi(phrases: string[]): Promise<ViLookup> {
+  const sources = (await dictionarySources())['vi-en'];
   for (const phrase of phrases) {
-    const entry = await get<ViEntry>('vi', phrase.toLowerCase());
-    if (entry) return { found: true, head: phrase, ...entry };
+    const key = phrase.toLowerCase();
+    const found = (await Promise.all(sources.map((s) => find<ViEntry>(s, 'vi', key)))).filter((e): e is ViEntry => !!e);
+    if (!found.length) continue;
+    const merged: ViEntry = { c: [...new Set(found.flatMap((e) => e.c))].slice(0, 12) };
+    const g = found.flatMap((e) => e.g ?? []);
+    const x = found.flatMap((e) => e.x ?? []);
+    const t = found.flatMap((e) => e.t ?? []);
+    if (g.length) merged.g = g.slice(0, 5);
+    if (x.length) merged.x = x.slice(0, 3);
+    if (t.length) merged.t = t.slice(0, 4);
+    return { found: true, head: phrase, ...merged };
   }
   return { found: false, head: phrases.at(-1) ?? '' };
 }

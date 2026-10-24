@@ -1,18 +1,20 @@
-// Settings form shared by the popup (click the toolbar icon) and the options page.
+// Popup settings (click the toolbar icon) and form pieces shared with the options page.
 import { el } from '../content/ui/dom.ts';
 import { type Settings, hotkeyLabel, loadSettings, parseTags, saveSettings } from '../shared/settings.ts';
 import { isBlocked, parseBlocklist, siteOf } from '../shared/blocklist.ts';
 
 type DeckResponse = { ok: true; decks: string[] } | { ok: false; msg: string };
 
-function toggle(checked: boolean, onChange: (v: boolean) => void): HTMLLabelElement {
+export type Save = (patch: Partial<Settings>) => void;
+
+export function toggle(checked: boolean, onChange: (v: boolean) => void): HTMLLabelElement {
   const input = el('input', { type: 'checkbox' });
   input.checked = checked;
   input.addEventListener('change', () => { onChange(input.checked); });
   return el('label', { class: 'switch' }, input, el('span'));
 }
 
-function row(label: string, hint: string | Node | null, control: HTMLElement): HTMLElement {
+export function row(label: string, hint: string | Node | null, control: HTMLElement): HTMLElement {
   return el('div', { class: 'row' }, el('div', { class: 'label' }, label, hint ? el('span', { class: 'hint' }, hint) : null), control);
 }
 
@@ -48,7 +50,7 @@ async function siteCard(s: Settings, save: (patch: Partial<Settings>) => void): 
 }
 
 /** Options page: the whole blocklist, one pattern per line. */
-function blocklistEditor(s: Settings, save: (patch: Partial<Settings>) => void): HTMLElement {
+export function blocklistEditor(s: Settings, save: (patch: Partial<Settings>) => void): HTMLElement {
   const area = el('textarea', { attrs: { rows: '6', spellcheck: 'false' }, placeholder: 'example.com\n*.example.com\nexample.com/chat' });
   area.value = s.blocklist.join('\n');
   area.addEventListener('change', () => {
@@ -64,7 +66,7 @@ function blocklistEditor(s: Settings, save: (patch: Partial<Settings>) => void):
     area, el('div', { class: 'toolbar' }, reset));
 }
 
-export async function renderSettings(root: HTMLElement, page: 'popup' | 'options'): Promise<void> {
+export async function renderSettings(root: HTMLElement): Promise<void> {
   const s: Settings = await loadSettings();
   const status = el('div', { class: 'status' });
   const save = (patch: Partial<Settings>): void => {
@@ -72,7 +74,8 @@ export async function renderSettings(root: HTMLElement, page: 'popup' | 'options
       () => { status.className = 'status err'; status.textContent = 'Could not save settings.'; });
   };
 
-  const hotkey = el('span', {}, el('span', { class: 'kbd' }, hotkeyLabel()), ' works on the selected word or the word under the mouse.');
+  const hotkey = s.hotkey === 'off' ? 'Keyboard shortcut: off (Options).'
+    : el('span', {}, el('span', { class: 'kbd' }, hotkeyLabel(s.hotkey)), ' works on the selected word or the word under the mouse.');
 
   // Deck list comes from Anki; keep the saved deck even if Anki is closed.
   const deck = el('select');
@@ -92,15 +95,13 @@ export async function renderSettings(root: HTMLElement, page: 'popup' | 'options
     save({ tags: list });
   });
 
-  const site = page === 'popup' ? await siteCard(s, save) : null;
+  const site = await siteCard(s, save);
   root.append(
     ...(site ? [site] : []),
     row('Enabled', null, toggle(s.enabled, (v) => { save({ enabled: v }); })),
-    
-    row('Mouse (double-click)', hotkey, toggle(s.mouse, (v) => { save({ mouse: v }); })),
+    row('Mouse (double-click, select)', hotkey, toggle(s.mouse, (v) => { save({ mouse: v }); })),
     el('div', { class: 'row stack' }, el('span', { class: 'label' }, 'Deck'), deck),
     el('div', { class: 'row stack' }, el('span', { class: 'label' }, 'Tags'), tags),
-    ...(page === 'options' ? [blocklistEditor(s, save)] : []),
     status,
   );
 }

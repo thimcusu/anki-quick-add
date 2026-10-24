@@ -1,62 +1,38 @@
-// Options page (chrome://extensions → Details → Extension options):
-// all settings plus Inspect mode and the log viewer.
+// Options page (toolbar icon → "All options", or chrome://extensions → Details → Extension options).
+// Tabs like Online Dictionary Helper: Extension · Services · Scripts · Logs.
 import { el } from '../content/ui/dom.ts';
-import { loadSettings, saveSettings } from '../shared/settings.ts';
-import type { LogEntry } from '../shared/types.ts';
-import { renderSettings } from './settings-form.ts';
+import { renderExtensionTab } from './options/extension-tab.ts';
+import { renderServicesTab } from './options/services-tab.ts';
+import { renderScriptsTab } from './options/scripts-tab.ts';
+import { renderLogsTab } from './options/logs-tab.ts';
+
+const TABS = [
+  ['extension', 'Extension', renderExtensionTab],
+  ['services', 'Services', renderServicesTab],
+  ['scripts', 'Scripts', renderScriptsTab],
+  ['logs', 'Logs', renderLogsTab],
+] as const;
+type TabId = (typeof TABS)[number][0];
+
+function main(root: HTMLElement): void {
+  root.append(el('div', { class: 'title' }, el('h1', {}, 'Anki Quick Add'), el('span', { class: 'version' }, `v${chrome.runtime.getManifest().version}`)));
+  const nav = el('nav', { class: 'tabs' });
+  const panel = el('section', { class: 'panel' });
+  root.append(nav, panel);
+  const show = (id: TabId): void => {
+    const tab = TABS.find((t) => t[0] === id) ?? TABS[0];
+    for (const b of nav.children) b.classList.toggle('active', (b as HTMLElement).dataset.tab === tab[0]);
+    panel.replaceChildren();
+    history.replaceState(null, '', `#${tab[0]}`);
+    tab[2](panel).catch((e: unknown) => { panel.append(el('div', { class: 'status err' }, `Could not load this tab: ${String(e)}`)); });
+  };
+  for (const [id, label] of TABS) {
+    const b = el('button', { class: 'tab', type: 'button', data: { tab: id } }, label);
+    b.addEventListener('click', () => { show(id); });
+    nav.append(b);
+  }
+  show((location.hash.slice(1) || 'extension') as TabId);
+}
 
 const app = document.getElementById('app');
-
-function time(t: number): string {
-  const d = new Date(t);
-  return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
-}
-
-async function renderLogs(container: HTMLElement): Promise<void> {
-  const logs = (await chrome.runtime.sendMessage<object, LogEntry[] | undefined>({ type: 'getLogs' })) ?? [];
-  container.replaceChildren(logs.length
-    ? el('table', { class: 'logs' }, ...logs.slice().reverse().map((l) => el('tr', {},
-      el('td', { class: 'time' }, time(l.t)),
-      el('td', {}, el('span', { class: `lvl ${l.level}` }, l.level)),
-      el('td', {}, l.event),
-      el('td', { class: 'detail' }, l.detail))))
-    : el('div', { class: 'empty' }, 'No log entries.'));
-}
-
-async function main(root: HTMLElement): Promise<void> {
-  root.append(el('div', { class: 'title' }, el('h1', {}, 'Anki Quick Add'), el('span', { class: 'version' }, `v${chrome.runtime.getManifest().version}`)));
-  root.append(el('h2', {}, 'Settings'));
-  const settingsBox = el('div');
-  root.append(settingsBox);
-  await renderSettings(settingsBox, 'options');
-
-  root.append(el('h2', {}, 'Inspect mode'));
-  const s = await loadSettings();
-  const inspect = el('input', { type: 'checkbox' });
-  inspect.checked = s.inspect;
-  inspect.addEventListener('change', () => { void saveSettings({ inspect: inspect.checked }); });
-  root.append(el('div', { class: 'row' },
-    el('div', { class: 'label' }, 'Record detailed logs',
-      el('span', { class: 'hint' }, 'Errors are always recorded. Turn this on to also record every lookup and Anki request while you reproduce a problem.')),
-    el('label', { class: 'switch' }, inspect, el('span'))));
-
-  const list = el('div');
-  const copyStatus = el('span', { class: 'version' });
-  const refresh = (): void => { void renderLogs(list); };
-  const copy = el('button', { class: 'btn', type: 'button' }, 'Copy');
-  copy.addEventListener('click', () => {
-    void chrome.runtime.sendMessage<object, LogEntry[]>({ type: 'getLogs' }).then(async (logs) => {
-      await navigator.clipboard.writeText(logs.map((l) => `${new Date(l.t).toISOString()} ${l.level} ${l.event} ${l.detail}`).join('\n'));
-      copyStatus.textContent = 'Copied.';
-    });
-  });
-  const clear = el('button', { class: 'btn', type: 'button' }, 'Clear');
-  clear.addEventListener('click', () => { void chrome.runtime.sendMessage({ type: 'clearLogs' }).then(refresh); });
-  const reload = el('button', { class: 'btn', type: 'button' }, 'Refresh');
-  reload.addEventListener('click', refresh);
-  root.append(el('h2', {}, 'Logs'), el('div', { class: 'toolbar' }, reload, copy, clear, copyStatus), list);
-  refresh();
-  chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local' && 'logs' in changes) refresh(); });
-}
-
-if (app) void main(app);
+if (app) main(app);

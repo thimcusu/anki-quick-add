@@ -6,8 +6,8 @@ import type { EnEntry, MeaningGroup, OxfordInfo, PartOfSpeech } from '../shared/
 export interface OxfordEntry {
   head: string;
   pos: PartOfSpeech;
-  ipa: string; // US if present, else UK
-  audio: string; // mp3 URL (US preferred)
+  ipa: string; // chosen accent if present, else the other
+  audio: string; // mp3 URL (chosen accent preferred)
   level: string; // CEFR, e.g. "B2" ('' if not in the Oxford 3000/5000)
   senses: { def: string; example: string }[];
   nearby: [string, PartOfSpeech][]; // neighbouring headwords, for the word family
@@ -16,7 +16,7 @@ export interface OxfordEntry {
 const AUDIO = /^https:\/\/www\.oxfordlearnersdictionaries\.com\/media\/english\/[a-z_]+\/[\w/.-]+\.mp3$/;
 const text = (el: Element | null | undefined): string => el?.textContent.replace(/\s+/g, ' ').trim() ?? '';
 
-export function parseOxford(html: string): OxfordEntry | null {
+export function parseOxford(html: string, accent: 'us' | 'uk' = 'us'): OxfordEntry | null {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const entry = doc.querySelector('#entryContent .entry');
   if (!entry) return null;
@@ -26,8 +26,9 @@ export function parseOxford(html: string): OxfordEntry | null {
   const phonetics = entry.querySelector('.webtop .phonetics');
   const us = phonetics?.querySelector('.phons_n_am') ?? null;
   const uk = phonetics?.querySelector('.phons_br') ?? null;
-  const ipa = text(us?.querySelector('.phon')) || text(uk?.querySelector('.phon'));
-  const audioUrl = us?.querySelector('.sound')?.getAttribute('data-src-mp3') ?? uk?.querySelector('.sound')?.getAttribute('data-src-mp3') ?? '';
+  const [first, second] = accent === 'uk' ? [uk, us] : [us, uk];
+  const ipa = text(first?.querySelector('.phon')) || text(second?.querySelector('.phon'));
+  const audioUrl = first?.querySelector('.sound')?.getAttribute('data-src-mp3') ?? second?.querySelector('.sound')?.getAttribute('data-src-mp3') ?? '';
 
   const levelLink = [...entry.querySelectorAll('.webtop .symbols a')].map((a) => a.getAttribute('href') ?? '').find((h) => /level=[abc][12]\b/i.test(h));
   const level = /level=([abc][12])\b/i.exec(levelLink ?? '')?.[1]?.toUpperCase() ?? '';

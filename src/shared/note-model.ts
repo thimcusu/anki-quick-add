@@ -20,7 +20,7 @@
 
 export const MODEL_NAME = 'EN-VI Vocab';
 /** Bump when templates or CSS change; the extension then updates the note type in Anki. */
-export const MODEL_VERSION = 3;
+export const MODEL_VERSION = 4;
 
 export const MODEL_FIELDS = [
   'Word', 'IPA', 'POS', 'Audio', 'Answer', 'Sentence', 'SentenceSound',
@@ -130,6 +130,8 @@ export const CSS = `
 .forms .form.main { display: none; }
 .forms .form.main + .form { border-top: 0; }
 .meaning-group + .meaning-group { margin-top: 10px; }
+.dict + .dict { margin-top: 14px; }
+.dict .dn { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
 .meaning-group .mp { color: var(--accent-text); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
 .meaning-group ul { margin: 2px 0 0; padding-left: 20px; }
 .meaning-group .mx { color: var(--muted); font-style: italic; font-size: 14px; margin-left: 20px; }

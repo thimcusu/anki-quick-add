@@ -26,6 +26,8 @@ TÍNH NĂNG
 • Từ chưa có trong từ điển: tra Oxford Learner's Dictionaries và Google Translate
 • Lưu thẻ vào Anki: sửa mặt trước, đáp án, câu ví dụ (in đậm, tô sáng); âm thanh được lưu kèm thẻ
 • Thẻ đẹp, có ô gõ đáp án, chế độ sáng/tối
+• Thêm từ điển của bạn (Lingoes, StarDict, Yomitan, TSV) và viết script tra từ
+• Dùng loại thẻ Anki của riêng bạn, tự chọn dữ liệu cho từng trường
 • Tắt tiện ích trên từng trang web (trang công ty, trang chat…)
 
 CẦN CÓ
@@ -53,6 +55,8 @@ FEATURES
 • Words missing offline: Oxford Learner's Dictionaries and Google Translate
 • Save to Anki: edit the front, the answer and the sentence (bold, highlight); audio is stored with the card
 • Clean cards with a type-in answer box, light and dark mode
+• Import your own dictionaries (Lingoes, StarDict, Yomitan, TSV) and write lookup scripts
+• Use your own Anki note type with a field mapping
 • Turn the extension off on any site (work tools, chats…)
 
 REQUIRES
@@ -74,6 +78,7 @@ Open source, collects no data: <GitHub URL>
 | Screenshot 1 — lookup bubble | `screenshot-1.png` | 1280×800 |
 | Screenshot 2 — card editor | `screenshot-2.png` | 1280×800 |
 | Screenshot 3 — Anki card front/back | `screenshot-3.png` | 1280×800 |
+| Screenshot 4 — options: dictionaries | `screenshot-4.png` | 1280×800 |
 | Small promo tile | `promo-440x280.png` | 440×280 |
 
 ## Privacy tab
@@ -88,6 +93,9 @@ Open source, collects no data: <GitHub URL>
 | `activeTab` | When the user clicks the toolbar icon, the popup reads the current tab's address to show the site with its "Block this site" / "Unblock" button. |
 | `storage` | Saves the user's settings (on/off, deck, tags, disabled sites) and a local error log. |
 | `tts` | Fallback pronunciation with the system voice when online audio can't play on a page. |
+| `unlimitedStorage` | Dictionaries the user imports (often 100,000+ entries, tens of MB) are stored locally in IndexedDB. |
+| `offscreen` | Hosts a sandboxed iframe that runs the dictionary scripts the user writes (MV3 service workers can't host iframes). |
+| Optional hosts `https://*/*`, `http://*/*` | Requested only when the user saves their own lookup script, and only for the sites that script declares with `// @host`; nothing is requested otherwise. |
 | Host `http://127.0.0.1:8765/*` | Talks to the AnkiConnect add-on of the user's own Anki application to list decks and add the flashcards the user saves. |
 | Host `https://ozdic.com/*` | Loads collocations for a word when the user clicks "Collocations". |
 | Host `https://www.oxfordlearnersdictionaries.com/*` | Looks up definitions, pronunciation and level for words missing from the offline dictionary. |
@@ -95,7 +103,7 @@ Open source, collects no data: <GitHub URL>
 | Host `https://translate.google.com/*` | Downloads pronunciation audio for the word, its forms and the sentence, which is stored with the Anki card. |
 | Content script on all http/https pages | The user can double-click or select a word on any page they read; the script does nothing until then and nothing on sites the user disabled. |
 
-**Remote code:** No, I am not using remote code.
+**Remote code:** No, I am not using remote code. (Users can write their own dictionary scripts in the options page; they are stored locally and run in a manifest `sandbox` page with no extension API and no direct network access.)
 
 **Data usage** — tick only:
 - *Website content* — the selected word/sentence and page title/address are used to build the card the user saves (sent only to the user's own Anki, and the word to the translation services listed in the privacy policy).

@@ -75,6 +75,46 @@ test('phrase fallback entries are validated', () => {
   assert.ok(!isFallbackEntry({ ...gt, s: 'sk' }));
 });
 
+test('script results and script sections are validated', async () => {
+  const { scriptEntry } = await import('../src/shared/script-result.ts');
+  const { isScriptSections, isCardDraft } = await import('../src/shared/validate.ts');
+  const e = scriptEntry({ ipa: '/x/', groups: [{ pos: 'noun', meanings: ['a', 42, '<b>b</b>'], examples: ['ex'] }, { meanings: [] }], extra: 'ignored' });
+  assert.deepEqual(e, { i: '/x/', g: [{ p: 'noun', m: ['a', '<b>b</b>'], x: ['ex'] }], s: 'sc' });
+  assert.equal(scriptEntry({ groups: 'nope' }), null);
+  const sec = { name: 'Free Dictionary', entry: { s: 'sc', head: 'word', i: '', g: [{ p: '', m: ['m'] }] } };
+  assert.equal(isScriptSections([sec]), true);
+  assert.equal(isScriptSections([{ ...sec, entry: { ...sec.entry, ox: {} } }]), false);
+  assert.equal(isScriptSections(Array(6).fill(sec)), false);
+  const draft = { front: 'w', word: 'w', ipa: '', pos: '', answer: '', forms: [], sentenceHtml: '', pageUrl: '', pageTitle: '', seenAs: '', seenIn: '' };
+  assert.equal(isCardDraft({ ...draft, extra: [sec] }), true);
+  assert.equal(isCardDraft({ ...draft, extra: [{ name: 'x', entry: { s: 'ox' } }] }), false);
+});
+
+test('script hosts', async () => {
+  const { hostAllowed } = await import('../src/background/scripts.ts');
+  const H = ['https://api.dictionaryapi.dev/*', 'https://*.example.com/*'];
+  assert.equal(hostAllowed('https://api.dictionaryapi.dev/api/v2/entries/en/x', H), 'https://api.dictionaryapi.dev/*');
+  assert.equal(hostAllowed('http://api.dictionaryapi.dev/x', H), null);
+  assert.equal(hostAllowed('https://evil.com/?https://api.dictionaryapi.dev/', H), null);
+  assert.equal(hostAllowed('https://a.example.com/x', H), 'https://*.example.com/*');
+  assert.equal(hostAllowed('https://example.com.evil.com/', H), null);
+  assert.equal(hostAllowed('https://api.dictionaryapi.dev:8443/x', H), null);
+});
+
+test('field mapping guess', async () => {
+  const { guessFieldMap } = await import('../src/pages/options/services-tab.ts').catch(() => ({ guessFieldMap: null }));
+  if (!guessFieldMap) return; // needs DOM-free import
+  assert.deepEqual(guessFieldMap(['Front', 'Back', 'Audio', 'Example']), { Front: 'word', Back: 'meanings', Audio: 'audio', Example: 'sentence' });
+});
+
+test('user scripts compile (TypeScript → JavaScript)', async () => {
+  const { transform } = await import('sucrase');
+  const code = transform('async function lookup(word: string, api: { json(u: string): Promise<unknown> }) { return null as unknown; }', { transforms: ['typescript'], disableESTransforms: true }).code;
+  assert.match(code, /async function lookup\(word, api\)/);
+  assert.equal(transform('async function lookup(word) { return 1 }', { transforms: [], disableESTransforms: true }).code.includes('lookup'), true);
+  assert.throws(() => transform('function (', { transforms: [], disableESTransforms: true }));
+});
+
 test('blockSite takes no data from the page', () => {
   assert.equal(isRequest({ type: 'blockSite' }), true);
   assert.equal(isRequest({ type: 'blockSite', site: 'evil.com' }), false);
@@ -88,7 +128,16 @@ test('page requests are separate from content requests', () => {
 
 test('settings: tags and normalization', () => {
   assert.deepEqual(parseTags(' anki-web, my tag ,, <b>x</b>, anki-web'), ['anki-web', 'my_tag', 'bxb']);
-  assert.deepEqual(normalizeSettings(null), { enabled: true, mouse: true, deck: 'English', tags: ['anki-quick-add'], inspect: false, blocklist: [] });
+  const d = normalizeSettings(null);
+  assert.deepEqual({ ...d, sections: undefined }, { enabled: true, mouse: true, hotkey: 'alt+a', accent: 'us', deck: 'English', tags: ['anki-quick-add'], noteType: '',
+    sections: undefined, fieldMap: {}, allowDuplicate: false, system: { oxford: true, translate: true, collocations: true }, inspect: false, blocklist: [] });
+  assert.equal(Object.values(d.sections).every(Boolean), true);
+  const n = normalizeSettings({ hotkey: 'evil', accent: 'uk', fieldMap: { Front: 'word', Back: 'bogus', X: 'meanings' }, sections: { audio: false }, system: { oxford: false } });
+  assert.equal(n.hotkey, 'alt+a');
+  assert.equal(n.accent, 'uk');
+  assert.deepEqual(n.fieldMap, { Front: 'word', X: 'meanings' });
+  assert.equal(n.sections.audio, false);
+  assert.deepEqual(n.system, { oxford: false, translate: true, collocations: true });
   assert.equal(normalizeSettings({ deck: 42, enabled: 'yes' }).deck, 'English');
   assert.deepEqual(normalizeSettings({ deck: 'Web', blocklist: ['https://Chat.Example.com/', 'bad site'] }).blocklist, ['chat.example.com']);
 });

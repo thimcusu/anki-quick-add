@@ -14,8 +14,9 @@ Tiện ích Chrome giúp bạn học từ vựng tiếng Anh ngay khi đọc bá
 - [Cách dùng](#cách-dùng)
 - [Thẻ Anki được tạo ra](#thẻ-anki-được-tạo-ra)
 - [Học với Anki — hướng dẫn nhanh](#học-với-anki--hướng-dẫn-nhanh)
-- [Tự tạo loại thẻ từ vựng trong Anki](#tự-tạo-loại-thẻ-từ-vựng-trong-anki)
+- [Dùng loại thẻ của riêng bạn](#dùng-loại-thẻ-của-riêng-bạn)
 - [Từ điển: có sẵn và thêm từ điển của bạn](#từ-điển-có-sẵn-và-thêm-từ-điển-của-bạn)
+- [Script tra từ](#script-tra-từ)
 - [Cài đặt của tiện ích](#cài-đặt-của-tiện-ích)
 - [Quyền riêng tư](#quyền-riêng-tư)
 - [Dành cho lập trình viên](#dành-cho-lập-trình-viên)
@@ -30,7 +31,11 @@ Tiện ích Chrome giúp bạn học từ vựng tiếng Anh ngay khi đọc bá
 - **Collocations** (cụm từ hay đi kèm) từ [ozdic.com](https://ozdic.com): chọn một cụm, câu ví dụ của nó thành câu trên thẻ.
 - **Từ chưa có trong từ điển offline**: tự tra trên Oxford Learner's Dictionaries và dịch bằng Google Translate.
 - **Lưu vào Anki**: sửa mặt trước, đáp án, câu ví dụ (in đậm, gạch chân, tô sáng) rồi bấm *Save to Anki*. Âm thanh của từ, các dạng từ và câu ví dụ được lưu kèm thẻ.
-- **Tắt trên từng trang**: ví dụ trang công ty, trang chat.
+- **Nhiều từ điển cùng lúc**: thêm từ điển của bạn (Lingoes `.ld2`, StarDict, Yomitan, TSV, hoặc file `.zip` chứa nhiều từ điển) ngay trong trang Options; mỗi từ điển hiện một mục riêng trong bong bóng.
+- **Script tra từ của riêng bạn** (JavaScript / TypeScript), chạy trong sandbox.
+- **Tuỳ chỉnh thẻ**: bật/tắt từng phần của thẻ, hoặc dùng **loại thẻ (note type) của riêng bạn** và chọn dữ liệu cho từng trường. Giọng đọc Mỹ hoặc Anh.
+- **Tắt trên từng trang**: ví dụ trang công ty, trang chat — một cú nhấp từ biểu tượng tiện ích.
+- **CSS riêng** cho bong bóng tra từ.
 - Giao diện sáng/tối, an toàn: bong bóng tra từ tách biệt khỏi trang web (xem [SECURITY.md](SECURITY.md)).
 
 ## Cài đặt
@@ -79,7 +84,8 @@ Tiện ích tự tạo bộ thẻ (deck, mặc định `English`) và loại th�
 |---|---|
 | **Nhấp đúp** vào một từ | Mở bong bóng tra từ |
 | **Bôi đen 2–8 từ** bằng chuột | Tra cả cụm (từ điển offline, nếu không có thì Google Translate) |
-| **⌥ Option + A** (macOS) / **Alt + A** (Windows, Linux) | Tra từ đang bôi đen, hoặc từ dưới con trỏ chuột |
+| **⌥ Option + A** (macOS) / **Alt + A** (Windows, Linux) — mặc định | Tra từ đang bôi đen, hoặc từ dưới con trỏ chuột |
+| Hoặc **một phím** Shift / Ctrl / Option (Alt) / Command — chọn trong Options | Nhấn riêng phím đó khi trỏ chuột vào một từ (giống ODH) |
 | **Esc** hoặc nhấp ra ngoài | Đóng bong bóng |
 
 Trong bong bóng:
@@ -133,24 +139,43 @@ Anki dùng **lặp lại ngắt quãng** (spaced repetition): thẻ bạn nhớ 
 5. **Học trên điện thoại:** tạo tài khoản [AnkiWeb](https://ankiweb.net) miễn phí, bấm **Sync** trong Anki, rồi cài **AnkiDroid** (Android, miễn phí) hoặc **AnkiMobile** (iOS). Lưu thẻ trên máy tính, ôn trên điện thoại.
 6. **Mẹo:** bật thuật toán **FSRS** (Options → *Advanced* → FSRS) để lịch ôn chính xác hơn; thêm *tag* (ví dụ `ielts`, `work`) để lọc thẻ khi cần.
 
-## Tự tạo loại thẻ từ vựng trong Anki
+## Dùng loại thẻ của riêng bạn
 
-Tiện ích luôn lưu vào loại thẻ `EN-VI Vocab` và **ghi đè mẫu thẻ (template) và CSS của nó mỗi khi tiện ích cập nhật giao diện thẻ**. Nếu muốn một kiểu thẻ riêng, hãy tạo một loại thẻ mới thay vì sửa `EN-VI Vocab`:
+Mặc định tiện ích dùng loại thẻ `EN-VI Vocab` ở trên. Bạn có hai cách tuỳ chỉnh, đều ở **Options → Services**:
 
-1. **Tools → Manage Note Types → Add**.
-2. Chọn **Clone: EN-VI Vocab** (giữ nguyên các trường) hoặc **Add: Basic (type in the answer)** (thẻ gõ đáp án đơn giản) → đặt tên, ví dụ `Từ vựng của tôi`.
-3. Bấm **Fields…** để thêm / đổi tên trường, ví dụ: `Word`, `Meaning`, `Example`, `Audio`.
-4. Bấm **Cards…** để sửa mẫu:
-   - *Front Template*, ví dụ: `{{Word}} {{Audio}} {{type:Meaning}}`
-   - *Back Template*, ví dụ: `{{FrontSide}}<hr id=answer>{{Meaning}}<br>{{Example}}`
-   - *Styling*: CSS cho thẻ (màu, cỡ chữ…).
-5. Để chuyển thẻ cũ sang loại mới: **Browse** → chọn thẻ → **Notes → Change Note Type…**.
+**1. Bật/tắt từng phần của thẻ `EN-VI Vocab`** — bỏ chọn những gì không cần: phiên âm, từ loại, âm thanh, ô gõ đáp án, câu ví dụ, âm thanh câu, dạng từ, nghĩa, nghĩa chuyên ngành, giải thích, link bài báo. Phần bị tắt để trống nên không hiện trên thẻ.
 
-> Phiên bản sau của tiện ích sẽ cho chọn loại thẻ và ghép trường (giống ODH).
+> Đừng sửa mẫu (template) của `EN-VI Vocab` trong Anki: tiện ích ghi đè mẫu và CSS mỗi khi cập nhật giao diện thẻ. Muốn kiểu thẻ khác thì dùng cách 2.
+
+**2. Dùng loại thẻ của riêng bạn**
+
+1. Trong Anki: **Tools → Manage Note Types → Add** → chọn **Add: Basic (type in the answer)** (hoặc *Clone: EN-VI Vocab*) → đặt tên, ví dụ `Từ vựng của tôi`.
+2. **Fields…** — đặt các trường bạn muốn, ví dụ `Word`, `Meaning`, `Example`, `Audio`.
+3. **Cards…** — sửa mẫu, ví dụ:
+   - *Front Template*: `{{Word}} {{Audio}} {{type:Meaning}}`
+   - *Back Template*: `{{FrontSide}}<hr id=answer>{{Meaning}}<br>{{Example}}`
+   - *Styling*: CSS của thẻ.
+4. Trong **Options → Services → Note type**, chọn loại thẻ vừa tạo. Bảng bên dưới liệt kê từng trường; chọn dữ liệu cho mỗi trường (tiện ích tự đoán theo tên trường):
+
+   | Dữ liệu | Nội dung |
+   |---|---|
+   | Word / phrase | Mặt trước (từ hoặc cụm) |
+   | Answer | Đáp án tiếng Việt |
+   | IPA, Part of speech | Phiên âm, từ loại |
+   | Word audio / Sentence audio | `[sound:…]` (âm thanh được lưu vào Anki) |
+   | Sentence | Câu ví dụ (HTML, từ được tô sáng) |
+   | Meanings (HTML) / Meanings (plain text) | Nghĩa của mọi từ điển / nghĩa dạng chữ thường |
+   | Word forms, Technical meanings | Các dạng từ, nghĩa chuyên ngành |
+   | Explanation, CEFR level | Từ Oxford (khi có) |
+   | Article link, Page address, Page title | Nguồn bài báo |
+
+5. Thẻ cũ có thể chuyển sang loại mới: **Browse** → chọn thẻ → **Notes → Change Note Type…**.
+
+**Allow duplicates** (mặc định tắt): khi tắt, từ đã có trong bộ sưu tập sẽ không được thêm lần nữa.
 
 ## Từ điển: có sẵn và thêm từ điển của bạn
 
-`npm run dict` tạo từ điển offline từ các nguồn trong **`dictionaries.json`**. Nguồn mặc định là các từ điển **mở** (được phép chia sẻ):
+Tiện ích có sẵn từ điển offline (**Built-in**):
 
 | Hướng | Từ điển | Ghi chú |
 |---|---|---|
@@ -158,71 +183,113 @@ Tiện ích luôn lưu vào loại thẻ `EN-VI Vocab` và **ghi đè mẫu th�
 | Việt → Anh | OVDP, Hồ Ngọc Đức, VNEDICT (qua [thu-tram/viet-yomitan](https://github.com/thu-tram/viet-yomitan)) | ~60.000 từ |
 | Dạng từ | WordNet 3.1 (gói npm `wordnet-db`) | Họ từ: danh/động/tính/trạng từ |
 
-### Thêm từ điển
+### Thêm từ điển (trong trang Options)
 
-1. Chép file từ điển vào thư mục **`dictionaries/`** (không đưa lên git).
-2. Tạo file **`dictionaries.local.json`** (không đưa lên git), ví dụ:
+![Danh sách từ điển trong Options](store/screenshot-4.png)
 
-   ```json
-   {
-     "en-vi": [
-       { "name": "Lingoes English-Vietnamese", "type": "lingoes", "file": "dictionaries/ev.ld2" },
-       { "name": "Free English-Vietnamese", "type": "lingoes-html", "file": "dictionaries/free.ld2" },
-       { "name": "Prodict technical", "type": "lingoes-technical", "file": "dictionaries/prodict.ld2" },
-       { "name": "Từ của tôi", "type": "tsv", "file": "dictionaries/my-words.tsv", "first": true }
-     ],
-     "vi-en": [
-       { "name": "Babylon Vietnamese-English (licence unclear — personal use)", "enabled": true }
-     ]
-   }
-   ```
+1. Bấm biểu tượng tiện ích → **All options…** → tab **Extension** → mục **Dictionaries**.
+2. Bấm **Add dictionary files…** và chọn một hoặc nhiều file — hoặc một file **`.zip`** chứa nhiều từ điển (zip lồng nhau cũng được).
+3. Với mỗi từ điển tìm thấy: kiểm tra **tên** và **hướng** (Anh → Việt hay Việt → Anh, tiện ích tự đoán) → bấm **Import**. File lớn (200.000+ từ) mất khoảng 20–30 giây.
+4. Trong danh sách: bật/tắt bằng công tắc, đổi thứ tự bằng ↑ ↓ (từ điển trên cùng là kết quả chính: phiên âm, đáp án gợi ý), **Delete** để xoá. Từ điển Built-in không xoá được nhưng có thể tắt.
 
-3. Chạy `npm run dict` rồi `npm run build:data` và bấm ↻ trên tiện ích.
-
-**Thứ tự ưu tiên:** nguồn đứng trước thắng. Nguồn của bạn mặc định đứng **sau** nguồn có sẵn (chỉ bổ sung từ còn thiếu); thêm `"first": true` để nó đứng **trước**. Muốn bật một nguồn có sẵn đang tắt, ghi đúng `name` của nó với `"enabled": true`.
+Từ điển được lưu trong trình duyệt (IndexedDB) trên máy này, không đưa lên mạng.
 
 **Định dạng hỗ trợ:**
 
-| `type` | Dùng cho |
+| Định dạng | File |
 |---|---|
-| `lingoes` | File Lingoes `.ld2` dạng văn bản (`@từ /ipa/`, `*từ loại`, `-nghĩa`), ví dụ *Lingoes English-Vietnamese* |
-| `lingoes-html` | File Lingoes `.ld2` dạng HTML, ví dụ *Free English-Vietnamese Dictionary* |
-| `lingoes-technical` | Từ điển chuyên ngành dạng Prodict: thêm mục *Technical* |
-| `tsv` | File văn bản, mỗi dòng: `từ<TAB>nghĩa 1; nghĩa 2<TAB>/ipa/<TAB>từ loại` (2 cột cuối không bắt buộc). Với `vi-en`: `từ tiếng Việt<TAB>english, english` |
-| `yomitan` | File `.zip` của Yomitan/Yomichan (Việt → Anh); `"style"`: `definitions`, `words`, `babylon`, `spdict` |
+| Lingoes | `.ld2` — dạng văn bản (`@từ /ipa/`, `*từ loại`, `-nghĩa`), dạng HTML, và từ điển chuyên ngành kiểu Prodict (thành mục *Technical*) — tự nhận ra |
+| StarDict | `.ifo` + `.idx` (hoặc `.idx.gz`) + `.dict` (hoặc `.dict.dz`) — chọn cả 3 file, hoặc nén chung vào `.zip` |
+| Yomitan / Yomichan | `.zip` có `index.json` + `term_bank_*.json` |
+| TSV / TXT | Mỗi dòng: `từ<TAB>nghĩa 1; nghĩa 2<TAB>/ipa/<TAB>từ loại` (2 cột cuối không bắt buộc). Việt → Anh: `từ tiếng Việt<TAB>english, english` |
 
 ### Gợi ý từ điển nên thêm
 
 - **Lingoes English-Vietnamese**, **Free English-Vietnamese** và **Prodict (chuyên ngành kỹ thuật, CNTT)** — file `.ld2` từ thư viện từ điển của [Lingoes](http://www.lingoes.net). Bổ sung ~30.000 từ và cụm từ, cùng hơn 200.000 thuật ngữ chuyên ngành.
-- **Apple, Babylon, SPDict Việt → Anh** — có sẵn trong `dictionaries.json` nhưng đang tắt; bật bằng `"enabled": true` (tăng lên ~126.000 từ tiếng Việt, thêm thuật ngữ kỹ thuật).
-- **Từ điển Lạc Việt** (định dạng Yomitan) — link trong [README của viet-yomitan](https://github.com/thu-tram/viet-yomitan).
-- **Danh sách từ của riêng bạn** — file `tsv`, ví dụ từ vựng IELTS, thuật ngữ công việc; đặt `"first": true` để nghĩa của bạn được ưu tiên.
+- **Apple, Babylon, SPDict Việt → Anh**, **Từ điển Lạc Việt** — file Yomitan `.zip` trong [thu-tram/viet-yomitan](https://github.com/thu-tram/viet-yomitan) (tải `dictionaries/<tên>.zip` rồi Import).
+- **Từ điển StarDict** Anh–Việt / Việt–Anh của dự án *Free Vietnamese Dictionary Project* (Hồ Ngọc Đức) hoặc OVDP.
+- **Danh sách từ của riêng bạn** — file TSV, ví dụ từ vựng IELTS, thuật ngữ công việc; kéo lên đầu danh sách để nghĩa của bạn được ưu tiên.
 
-> ⚖️ Lingoes, Prodict, Apple, Babylon, Lạc Việt **không phải** từ điển mở: chỉ dùng cho cá nhân, **không** đưa dữ liệu của chúng lên git hay phát hành lại. `npm run package` sẽ từ chối đóng gói khi từ điển có nguồn riêng tư.
+> ⚖️ Lingoes, Prodict, Apple, Babylon, Lạc Việt **không phải** từ điển mở: chỉ dùng cho cá nhân, **không** đưa dữ liệu của chúng lên git hay phát hành lại.
+
+### Dành cho người build từ mã nguồn
+
+Từ điển Built-in được tạo bằng `npm run dict` từ **`dictionaries.json`** (chỉ nguồn mở). Muốn gộp sẵn từ điển của bạn vào Built-in (không cần Import trên từng máy): chép file vào `dictionaries/`, liệt kê trong **`dictionaries.local.json`** (không đưa lên git) rồi chạy `npm run dict` → `npm run build:data`:
+
+```json
+{
+  "en-vi": [
+    { "name": "Lingoes English-Vietnamese", "type": "lingoes", "file": "dictionaries/ev.ld2" },
+    { "name": "Free English-Vietnamese", "type": "lingoes-html", "file": "dictionaries/free.ld2" },
+    { "name": "Prodict technical", "type": "lingoes-technical", "file": "dictionaries/prodict.ld2" }
+  ],
+  "vi-en": [
+    { "name": "Babylon Vietnamese-English (licence unclear — personal use)", "enabled": true }
+  ]
+}
+```
+
+Kiểu (`type`): `lingoes`, `lingoes-html`, `lingoes-technical`, `tsv`, `yomitan` (`"style"`: `definitions`, `words`, `babylon`, `spdict`). Nguồn của bạn đứng sau nguồn có sẵn (chỉ bổ sung từ còn thiếu); `"first": true` để đứng trước. `npm run package` luôn dùng nguồn mở, không bao giờ đóng gói `dictionaries.local.json`.
+
+## Script tra từ
+
+Script là từ điển bạn tự viết (JavaScript hoặc TypeScript) — ví dụ lấy nghĩa từ một trang web hay API. **Options → Scripts → User scripts**:
+
+1. **New script** (mẫu trống) hoặc **Add example (Free Dictionary)** (ví dụ TypeScript dùng api.dictionaryapi.dev).
+2. Viết hàm `lookup(word, api)`:
+
+   ```ts
+   // @name Từ điển của tôi
+   // @host https://example.com
+   async function lookup(word: string, api) {
+     const doc = api.html(await api.fetch(`https://example.com/search?q=${encodeURIComponent(word)}`));
+     const meanings = [...doc.querySelectorAll('.meaning')].map((e) => e.textContent.trim());
+     return meanings.length ? { ipa: '', groups: [{ pos: 'noun', meanings, examples: [] }] } : null;
+   }
+   ```
+
+   - `// @name` — tên hiện trong bong bóng; `// @host` — các trang script được phép tải (có thể nhiều dòng).
+   - `api.fetch(url)` → chữ, `api.json(url)` → JSON, `api.html(text)` → Document để dùng `querySelector`.
+   - Trả về `{ ipa?, groups: [{ pos?, meanings: [...], examples?: [...] }] }` hoặc `null`.
+3. **Save** — Chrome hỏi bạn cho phép truy cập các trang trong `@host`. **Test** để thử với một từ.
+4. Bật/tắt và sắp xếp script trong danh sách từ điển (tab **Extension**). Kết quả script hiện thành một mục riêng trong bong bóng và được lưu vào thẻ.
+
+An toàn: script chạy trong một trang **sandbox** riêng — không truy cập được tiện ích, trang web bạn đang đọc hay cookie; chỉ tải được các trang trong `@host` mà bạn đã cho phép; kết quả chỉ là chữ thuần.
+
+**System scripts** (cùng tab): bật/tắt các trợ giúp trực tuyến có sẵn — Oxford (từ không có offline), Google Translate (cụm từ), Collocations (ozdic). Tắt hết để chỉ dùng offline.
 
 ## Cài đặt của tiện ích
 
-**Bấm biểu tượng tiện ích** trên thanh công cụ:
+**Bấm biểu tượng tiện ích** trên thanh công cụ (cài đặt nhanh):
 
 | Mục | Ý nghĩa |
 |---|---|
+| *tên trang* + **Block this site** / **Unblock** | Tắt / bật lại tiện ích trên trang đang xem chỉ với một cú nhấp |
 | Enabled | Bật / tắt toàn bộ tiện ích |
-| *tên trang* + **Block this site** / **Unblock** | Tắt / bật lại tiện ích trên trang web đang xem chỉ với một cú nhấp |
-| Mouse (double-click) | Tắt thì chỉ phím tắt ⌥A / Alt+A hoạt động |
-| Deck | Bộ thẻ Anki để lưu (danh sách lấy từ Anki) |
-| Tags | Nhãn gắn vào mỗi thẻ, cách nhau bằng dấu phẩy |
+| Mouse (double-click, select) | Tắt thì chỉ phím tắt hoạt động |
+| Deck, Tags | Bộ thẻ Anki và nhãn cho thẻ mới |
+| **All options…** | Mở trang Options đầy đủ |
 
-**`chrome://extensions` → Anki Quick Add → Details → Extension options** có thêm:
+**Trang Options** (từ popup, hoặc `chrome://extensions` → Anki Quick Add → Details → Extension options) có 4 tab:
 
-- **Danh sách trang bị tắt**, mỗi dòng một mẫu:
-  - `example.com` — trang đó và mọi tên miền con (`www.example.com`, `chat.example.com`)
-  - `*.example.com` — chỉ các tên miền con
-  - `example.com/chat` — chỉ các địa chỉ bắt đầu bằng đường dẫn này
-  - `https://example.com/page` — dán nguyên địa chỉ cũng được
-  - `192.168.1.10:8080` — địa chỉ có cổng
-- **Record detailed logs** và **Logs** — để tìm lỗi.
+| Tab | Nội dung |
+|---|---|
+| **Extension** | Enabled, Mouse selection, **Hotkey** (⌥A/Alt+A, hoặc một phím Shift/Ctrl/Option/Command nhấn riêng; Off), **Pronunciation** (Mỹ / Anh), **Dictionaries** (danh sách, thứ tự, Import), **Disabled sites** |
+| **Services** | Trạng thái AnkiConnect và phiên bản, **Deck**, **Note type** (EN-VI Vocab với các phần bật/tắt, hoặc loại thẻ của bạn + bảng ghép trường), **Tags**, **Allow duplicates** |
+| **Scripts** | System scripts (Oxford, Google Translate, Collocations), **User scripts** (viết / sửa / thử), **Custom CSS** cho bong bóng |
+| **Logs** | Ghi log chi tiết và xem log để tìm lỗi |
 
-Trang được thêm vào danh sách khi bạn bấm **⊘** trong bong bóng hoặc **Block this site** trong popup.
+**Danh sách trang bị tắt** (tab Extension), mỗi dòng một mẫu:
+
+- `example.com` — trang đó và mọi tên miền con (`www.example.com`, `chat.example.com`)
+- `*.example.com` — chỉ các tên miền con
+- `example.com/chat` — chỉ các địa chỉ bắt đầu bằng đường dẫn này
+- `https://example.com/page` — dán nguyên địa chỉ cũng được
+- `192.168.1.10:8080` — địa chỉ có cổng
+
+Trang cũng được thêm khi bạn bấm **⊘** trong bong bóng hoặc **Block this site** trong popup.
+
+**Custom CSS** (tab Scripts): CSS áp dụng cho bong bóng tra từ, sau CSS mặc định. Ví dụ: `.bubble { width: 460px; font-size: 15px; }`. Các class chính: `.bubble .header .body .footer .word .ipa .label .section .example .dict .btn .chip`.
 
 ## Quyền riêng tư
 
@@ -235,8 +302,9 @@ Tiện ích không có máy chủ riêng, không thu thập dữ liệu. Những
 | translate.googleapis.com | Từ hoặc cụm không có trong từ điển offline | Từ / cụm cần dịch |
 | oxfordlearnersdictionaries.com | Từ không có trong từ điển offline | Từ cần tra |
 | ozdic.com | Bấm *Collocations* | Từ cần tra |
+| Các trang trong `@host` của script bạn viết | Khi tra từ (nếu script được bật) | Những gì script của bạn gửi (thường là từ cần tra) |
 
-Không gửi cookie. Địa chỉ trang bạn đang đọc chỉ được lưu vào thẻ Anki trên máy bạn; riêng khi bấm 🔊 trong bong bóng, trình duyệt có thể gửi kèm tên miền của trang (Referer) tới Google. Chi tiết: [PRIVACY.md](PRIVACY.md).
+Từ điển bạn import, script và CSS chỉ lưu trong trình duyệt trên máy này. Không gửi cookie. Địa chỉ trang bạn đang đọc chỉ được lưu vào thẻ Anki trên máy bạn; riêng khi bấm 🔊 trong bong bóng, trình duyệt có thể gửi kèm tên miền của trang (Referer) tới Google. Chi tiết: [PRIVACY.md](PRIVACY.md).
 
 ## Dành cho lập trình viên
 
@@ -255,7 +323,10 @@ src/
   shared/      kiểu dữ liệu, mặc định (defaults.ts), escape/sanitize HTML, kiểm tra message, mẫu thẻ Anki
   background/  service worker: tra từ điển, AnkiConnect, tạo thẻ, ozdic, Oxford, Google
   content/     content script: ngữ cảnh nhấp, bong bóng (closed shadow DOM), trình soạn câu
-  pages/       popup và trang Options
+  pages/       popup và trang Options (options/: các tab)
+  sandbox/     trang sandbox chạy script của người dùng
+  offscreen/   trang offscreen chứa sandbox, chuyển message với service worker
+  shared/formats/  đọc từ điển: ZIP, Lingoes .ld2, StarDict, Yomitan, TSV
 scripts/       build.mjs, package.mjs, make_icons.py, dict/build_dict.py
 static/        manifest.json, trang HTML, icon
 store/         nội dung và hình ảnh cho Chrome Web Store (xem PUBLISHING.md)

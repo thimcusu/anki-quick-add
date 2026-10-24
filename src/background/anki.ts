@@ -7,6 +7,8 @@ const DEFAULT_TIMEOUT_MS = 15_000;
 const PERMISSION_TIMEOUT_MS = 60_000; // the user has to click "Yes" in Anki
 
 type Action =
+  | 'version'
+  | 'modelFieldNames'
   | 'requestPermission'
   | 'deckNames'
   | 'modelNames'

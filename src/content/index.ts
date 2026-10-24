@@ -1,10 +1,11 @@
-// Content script: opens the bubble on a real double-click (mouse mode) or on
-// the hotkey (Option+A on macOS, Alt+A elsewhere) for the selected word or the
-// word under the mouse pointer. Respects the settings from the popup.
+// Content script: opens the bubble on a real double-click or drag-selection
+// (mouse mode) or on the hotkey — Option+A / Alt+A, or a single modifier key
+// pressed alone (ODH style) — for the selection or the word under the mouse.
 import { type Settings, DEFAULT_SETTINGS, watchSettings } from '../shared/settings.ts';
 import { isBlocked } from '../shared/blocklist.ts';
 import { looksVietnamese, readContext, vietnamesePhrases } from './context.ts';
-import { api, logRemote } from './messaging.ts';
+import { api, logRemote, setAccent } from './messaging.ts';
+import { loadLocal, MAX_CSS } from '../shared/local-settings.ts';
 import { lookupWord } from './lookup.ts';
 import { Bubble } from './ui/bubble.ts';
 
@@ -16,8 +17,14 @@ let pointer = { x: -1, y: -1 };
 
 let blocked = false; // this site is on the blocklist
 
+let customCss = '';
+const loadCss = (): void => { loadLocal().then((l) => { customCss = l.customCss.slice(0, MAX_CSS); }, () => undefined); };
+loadCss();
+chrome.storage.onChanged.addListener((changes, area) => { if (area === 'local' && 'customCss' in changes) loadCss(); });
+
 watchSettings((s) => {
   settings = s;
+  setAccent(s.accent);
   blocked = isBlocked(location.href, s.blocklist);
   if (!s.enabled || blocked) closeBubble();
 });
@@ -63,15 +70,15 @@ async function open(range: Range): Promise<void> {
     const vi = await api.lookupVi(vietnamesePhrases(ctx));
     if (vi.found) {
       closeBubble();
-      bubble = new Bubble({ ctx, surface, vi: { phrase: vi.head, entry: vi } }, anchor);
+      bubble = new Bubble({ ctx, surface, vi: { phrase: vi.head, entry: vi } }, anchor, { settings, css: customCss });
       bubble.showVietnamese();
       return;
     }
   }
   if (!ENGLISH_PHRASE.test(surface)) return;
-  const en = await lookupWord(surface);
+  const en = await lookupWord(surface, settings);
   closeBubble();
-  bubble = new Bubble({ ctx, surface }, anchor);
+  bubble = new Bubble({ ctx, surface }, anchor, { settings, css: customCss });
   bubble.showWord(en.found ? en : { head: en.head, i: '', g: [], s: 'lv' });
 }
 
@@ -101,11 +108,22 @@ document.addEventListener('mouseup', (ev) => {
   open(selection.getRangeAt(0).cloneRange()).catch((e: unknown) => { logRemote('error', 'open bubble failed', e); });
 });
 
+const MODIFIER_KEY: Partial<Record<Settings['hotkey'], string>> = { shift: 'Shift', ctrl: 'Control', alt: 'Alt', meta: 'Meta' };
+
+/** Option+A / Alt+A (ev.code is layout-independent: Option+A types "å" on macOS), or one modifier pressed on its own. */
+function isHotkey(ev: KeyboardEvent): boolean {
+  if (settings.hotkey === 'alt+a') return ev.code === 'KeyA' && ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
+  const key = MODIFIER_KEY[settings.hotkey];
+  if (!key || ev.key !== key || ev.repeat) return false;
+  const others = { Shift: ev.shiftKey, Control: ev.ctrlKey, Alt: ev.altKey, Meta: ev.metaKey };
+  return Object.entries(others).every(([k, down]) => k === key || !down);
+}
+
 document.addEventListener('keydown', (ev) => {
   if (ev.key === 'Escape') { closeBubble(); return; }
-  // ev.code is layout-independent (Option+A types "å" on macOS).
-  const hotkey = ev.code === 'KeyA' && ev.altKey && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey;
-  if (!hotkey || !ev.isTrusted || !active() || isEditable(ev.target) || bubble?.contains(ev)) return;
+  if (!ev.isTrusted || !active() || !isHotkey(ev) || isEditable(ev.target) || bubble?.contains(ev)) return;
+  // A modifier alone only acts on the word under the mouse; never swallow it.
+  if (MODIFIER_KEY[settings.hotkey]) { const range = wordRange(); if (range) open(range).catch((e: unknown) => { logRemote('error', 'open bubble failed', e); }); return; }
   trigger(ev);
 }, true);
 

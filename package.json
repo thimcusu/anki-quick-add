@@ -1,6 +1,6 @@
 {
   "name": "anki-quick-add",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "private": true,
   "description": "Double-click English or Vietnamese words on any page and add English vocabulary to Anki.",
   "type": "module",
@@ -23,6 +23,7 @@
     "esbuild": "0.28.2",
     "eslint": "9.39.1",
     "eslint-plugin-no-unsanitized": "4.1.5",
+    "sucrase": "3.35.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.72.0",
     "wordnet-db": "3.1.14"

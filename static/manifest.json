@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Anki Quick Add (EN ⇄ VI)",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Double-click an English word (→ Vietnamese) or a Vietnamese word (→ English), edit the card and add it to Anki. Works offline.",
   "minimum_chrome_version": "120",
   "icons": {
@@ -13,7 +13,9 @@
   "permissions": [
     "activeTab",
     "storage",
-    "tts"
+    "unlimitedStorage",
+    "tts",
+    "offscreen"
   ],
   "host_permissions": [
     "http://127.0.0.1:8765/*",
@@ -21,6 +23,10 @@
     "https://www.oxfordlearnersdictionaries.com/*",
     "https://translate.googleapis.com/*",
     "https://translate.google.com/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -38,7 +44,13 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'"
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'",
+    "sandbox": "sandbox allow-scripts; default-src 'none'; script-src 'self' 'unsafe-eval'; connect-src 'none'; img-src 'none'; style-src 'none'"
+  },
+  "sandbox": {
+    "pages": [
+      "sandbox.html"
+    ]
   },
   "action": {
     "default_title": "Anki Quick Add — settings",

@@ -1,17 +1,18 @@
-// Turns a CardDraft (from the bubble's editor) into an "EN-VI Vocab" note.
+// Turns a CardDraft (from the bubble's editor) into an Anki note: the built-in
+// "EN-VI Vocab" note type (with the card sections the user switched on) or the
+// user's own note type (fields filled through the field mapping).
 // Every field is escaped or re-sanitized here, because the draft comes from a
 // content script running inside a web page. Meanings, examples and word-form
 // details are looked up again in the offline dictionary.
-import type { CardDraft, EnEntry, Result } from '../shared/types.ts';
+import type { CardDraft, DictSection, EnEntry, Result } from '../shared/types.ts';
 import { escapeHtml, safeUrl, sanitizeInline, stripTags } from '../shared/html.ts';
 import { containsWord, exampleContaining, POS_SHORT, uniqueLemmas } from '../shared/forms.ts';
 import { BACK, CSS, FRONT, MODEL_FIELDS, MODEL_NAME, MODEL_VERSION } from '../shared/note-model.ts';
-import { loadSettings } from '../shared/settings.ts';
+import { type CardSection, type DataKey, loadSettings, type Settings, ttsUrl } from '../shared/settings.ts';
 import { anki, AnkiError, ensurePermission } from './anki.ts';
 import { lookupEn } from './dictionary.ts';
 import { log } from './log.ts';
 
-const TTS_URL = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=';
 const MAX_TTS_CHARS = 200;
 const AUDIO_TIMEOUT_MS = 12_000;
 const MAX_FORMS = 8;
@@ -21,7 +22,6 @@ type Fields = Record<(typeof MODEL_FIELDS)[number], string>;
 interface FormInfo { word: string; pos: string[]; ipa: string; example: string; sound: string }
 interface AudioJob { filename: string; url: string }
 const OXFORD_AUDIO = /^https:\/\/www\.oxfordlearnersdictionaries\.com\/media\/english\/[a-z_]+\/[\w/.-]+\.mp3$/;
-const ttsUrl = (text: string): string => TTS_URL + encodeURIComponent(text);
 
 const slug = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'audio';
 
@@ -44,6 +44,12 @@ export function formsHtml(forms: FormInfo[]): string {
       (f.example ? `<div class="fx">${escapeHtml(f.example)}</div>` : '') +
       '</div>';
   }).join('') + '</div>';
+}
+
+/** Meanings of every dictionary; with more than one, each gets its dictionary's name as a heading. */
+export function sectionsHtml(sections: DictSection[], word: string): string {
+  if (sections.length <= 1) return meaningsHtml(sections[0]?.entry ?? null, word);
+  return sections.map((sec) => `<div class="dict"><div class="dn">${escapeHtml(sec.name)}</div>${meaningsHtml(sec.entry, word)}</div>`).join('');
 }
 
 export function meaningsHtml(entry: EnEntry | null, word: string): string {
@@ -121,65 +127,77 @@ async function ensureModel(): Promise<void> {
   modelChecked = true;
 }
 
+/** Everything a card can contain, as HTML-safe strings (keys = DataKey). */
+type CardData = Record<Exclude<DataKey, ''>, string>;
+
 export async function addCard(draft: CardDraft): Promise<Result> {
   const settings = await loadSettings();
   const deck = settings.deck;
   const front = draft.front.trim();
-  log('info', 'addCard start', { front, deck });
+  const builtIn = !settings.noteType;
+  log('info', 'addCard start', { front, deck, noteType: settings.noteType || MODEL_NAME });
   try {
     await ensurePermission();
-    await ensureModel();
+    if (builtIn) await ensureModel();
+    const fieldNames = builtIn ? [...MODEL_FIELDS] : await anki<string[]>('modelFieldNames', { modelName: settings.noteType });
+    const used = usedData(settings, fieldNames);
 
-    // Offline dictionary first; the Oxford fallback (validated) when the word isn't there.
+    // Dictionaries are looked up again here (the draft comes from a web page); online and script results are validated.
     const lookup = await lookupEn(draft.word);
     const fallback = draft.fallback ?? null;
-    const entry = lookup.found && lookup.g.length ? lookup : fallback ?? (lookup.found ? lookup : null);
+    const sections: DictSection[] = lookup.found && lookup.sections?.length ? lookup.sections : fallback ? [{ id: 'online', name: 'Online', entry: fallback }] : [];
+    sections.push(...(draft.extra ?? []).map((x) => ({ id: 'script', name: x.name, entry: x.entry })));
+    const entry: EnEntry | null = sections[0]?.entry ?? null;
     const oxford = entry === fallback ? fallback?.ox : undefined;
     const stamp = Date.now().toString(36);
     const forms = await wordForms(draft, entry, stamp);
     const sentence = sentenceHtml(draft);
     const plainSentence = stripTags(sentence);
-    const sentenceFile = plainSentence && plainSentence.length <= MAX_TTS_CHARS ? `qa_s-${slug(front)}-${stamp}.mp3` : '';
+    const sentenceFile = used.has('sentenceAudio') && plainSentence && plainSentence.length <= MAX_TTS_CHARS ? `qa_s-${slug(front)}-${stamp}.mp3` : '';
 
     // Download all audio into Anki BEFORE adding the note, so every sound field is
     // filled in the same write (a later edit fails while the note is open in Anki).
     const wordFile = forms.find((f) => f.word === draft.word)?.sound ?? `qa_${slug(draft.word)}-${stamp}.mp3`;
-    const wordUrl = oxford && OXFORD_AUDIO.test(oxford.audio) ? oxford.audio : ttsUrl(draft.word); // Oxford's real voice if we have it
-    const jobs = new Map<string, string>([[wordFile, wordUrl]]);
-    for (const f of forms) if (!jobs.has(f.sound)) jobs.set(f.sound, ttsUrl(f.word));
-    if (sentenceFile) jobs.set(sentenceFile, ttsUrl(plainSentence));
+    const oxfordAudio = oxford && OXFORD_AUDIO.test(oxford.audio) ? oxford.audio : '';
+    const jobs = new Map<string, string>();
+    if (used.has('audio')) jobs.set(wordFile, oxfordAudio || ttsUrl(draft.word, settings.accent)); // Oxford's real voice if we have it
+    if (used.has('forms')) for (const f of forms.slice(1)) if (!jobs.has(f.sound)) jobs.set(f.sound, ttsUrl(f.word, settings.accent));
+    if (sentenceFile) jobs.set(sentenceFile, ttsUrl(plainSentence, settings.accent));
     const stored = await downloadAudio([...jobs].map(([filename, url]) => ({ filename, url })));
     const wordSound = stored.get(wordFile);
     const sentenceSound = stored.get(sentenceFile);
     for (const f of forms) f.sound = stored.get(f.sound) ?? '';
 
-    const fields: Fields = {
-      Word: escapeHtml(front),
-      IPA: escapeHtml(draft.ipa || (entry?.i ?? '')),
-      POS: escapeHtml(draft.pos),
-      Audio: wordSound ? `[sound:${wordSound}]` : '',
-      Answer: escapeHtml(draft.answer.trim()),
-      Sentence: sentence,
-      SentenceSound: sentenceSound ? `[sound:${sentenceSound}]` : '',
-      Forms: formsHtml(forms),
-      Meanings: meaningsHtml(entry, draft.word),
-      Technical: technicalHtml(entry),
-      // From Oxford: English definitions and CEFR level (otherwise Claude fills them later).
-      Explanation: oxford?.defs.length ? `<ul>${oxford.defs.slice(0, 3).map((d) => `<li>${escapeHtml(d)}</li>`).join('')}</ul>` : '',
-      Level: escapeHtml(oxford?.level ?? ''),
-      Source: sourceHtml(draft),
-      IsSentence: '',
-      // Every file, so Anki's "Check Media" keeps the ones only used by play buttons.
-      Media: [...stored.values()].map((f) => `[sound:${f}]`).join(''),
-      Data: escapeHtml(JSON.stringify({ v: 1, draft: { ...draft, sentenceHtml: sentence }, forms, entry })),
+    const url = safeUrl(draft.pageUrl);
+    const data: CardData = {
+      word: escapeHtml(front),
+      answer: escapeHtml(draft.answer.trim()),
+      ipa: escapeHtml(draft.ipa || (entry?.i ?? '')),
+      pos: escapeHtml(draft.pos),
+      audio: wordSound ? `[sound:${wordSound}]` : '',
+      sentence,
+      sentenceAudio: sentenceSound ? `[sound:${sentenceSound}]` : '',
+      meanings: sectionsHtml(sections, draft.word),
+      meaningsText: escapeHtml(sections.flatMap((x) => x.entry.g.flatMap((g) => g.m.slice(0, MAX_MEANINGS))).slice(0, 8).join('; ')),
+      forms: formsHtml(forms),
+      technical: technicalHtml(entry),
+      // From Oxford: English definitions and CEFR level (otherwise left for the user / Claude).
+      explanation: oxford?.defs.length ? `<ul>${oxford.defs.slice(0, 3).map((d) => `<li>${escapeHtml(d)}</li>`).join('')}</ul>` : '',
+      level: escapeHtml(oxford?.level ?? ''),
+      source: sourceHtml(draft),
+      url: url ? escapeHtml(url) : '',
+      pageTitle: escapeHtml(draft.pageTitle.trim()),
     };
+
+    const fields = builtIn ? builtInFields(data, settings, [...stored.values()], draft, entry, forms) : mappedFields(data, settings, fieldNames);
+    if (!Object.values(fields).some((v) => v.trim())) return fail('The field mapping leaves every field empty — check Options → Anki.');
     const note = {
       deckName: deck,
-      modelName: MODEL_NAME,
+      modelName: builtIn ? MODEL_NAME : settings.noteType,
       fields,
       // "from-vi" marks cards picked on Vietnamese pages.
       tags: [...new Set([...settings.tags, ...(draft.seenAs ? ['from-vi'] : [])])],
-      options: { allowDuplicate: false, duplicateScope: 'collection' },
+      options: { allowDuplicate: settings.allowDuplicate, duplicateScope: 'collection' },
     };
 
     await anki('createDeck', { deck });
@@ -195,6 +213,44 @@ export async function addCard(draft: CardDraft): Promise<Result> {
     log('error', 'addCard failed', e);
     return fail(e instanceof AnkiError ? e.message : 'Unexpected error while talking to Anki.');
   }
+}
+
+/** Which data the current note type actually needs (so unneeded audio isn't downloaded). */
+function usedData(settings: Settings, fieldNames: string[]): Set<DataKey> {
+  if (!settings.noteType) {
+    const on = (k: CardSection): boolean => settings.sections[k];
+    return new Set<DataKey>([
+      ...(on('audio') ? ['audio' as const] : []), ...(on('sentenceAudio') && on('sentence') ? ['sentenceAudio' as const] : []), ...(on('forms') ? ['forms' as const] : []),
+    ]);
+  }
+  return new Set(fieldNames.map((f) => settings.fieldMap[f] ?? ''));
+}
+
+const SECTION_FIELDS: Record<CardSection, (keyof Fields)[]> = {
+  ipa: ['IPA'], pos: ['POS'], audio: ['Audio'], answer: ['Answer'], sentence: ['Sentence', 'SentenceSound'], sentenceAudio: ['SentenceSound'],
+  forms: ['Forms'], meanings: ['Meanings'], technical: ['Technical'], explanation: ['Explanation', 'Level'], source: ['Source'],
+};
+
+function builtInFields(data: CardData, settings: Settings, media: string[], draft: CardDraft, entry: EnEntry | null, forms: FormInfo[]): Fields {
+  const fields: Fields = {
+    Word: data.word, IPA: data.ipa, POS: data.pos, Audio: data.audio, Answer: data.answer, Sentence: data.sentence,
+    SentenceSound: data.sentenceAudio, Forms: data.forms, Meanings: data.meanings, Technical: data.technical,
+    Explanation: data.explanation, Level: data.level, Source: data.source, IsSentence: '',
+    // Every file, so Anki's "Check Media" keeps the ones only used by play buttons.
+    Media: media.map((f) => `[sound:${f}]`).join(''),
+    Data: escapeHtml(JSON.stringify({ v: 2, draft: { ...draft, sentenceHtml: data.sentence }, forms, entry })),
+  };
+  for (const [section, names] of Object.entries(SECTION_FIELDS) as [CardSection, (keyof Fields)[]][]) {
+    if (!settings.sections[section]) for (const n of names) fields[n] = '';
+  }
+  return fields;
+}
+
+function mappedFields(data: CardData, settings: Settings, fieldNames: string[]): Record<string, string> {
+  return Object.fromEntries(fieldNames.map((f) => {
+    const key = settings.fieldMap[f] ?? '';
+    return [f, key ? data[key] : ''];
+  }));
 }
 
 function fail(msg: string): Result {

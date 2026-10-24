@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.0 — 2026-10-24
+
+Options page rebuilt with tabs, like Online Dictionary Helper: **Extension · Services · Scripts · Logs**.
+
+- **Dictionaries:** import your own in the options page — Lingoes `.ld2` (text, HTML and technical styles detected), StarDict (`.ifo`/`.idx[.gz]`/`.dict[.dz]`), Yomitan `.zip`, TSV/TXT, or a `.zip` containing several (nested zips too). Stored in IndexedDB. Enable/disable and order them; the bubble shows **one section per dictionary**, and cards include every dictionary's meanings.
+- **Hotkey:** ⌥A/Alt+A (default), a single Shift / Ctrl / Option(Alt) / Command key pressed alone (ODH style), or off.
+- **Pronunciation:** American or British (Google voice `en-US`/`en-GB`, Oxford US/UK recordings).
+- **Services:** AnkiConnect status and version, deck, **note type** — the built-in EN-VI Vocab with each card part on/off, or **your own note type** with a field mapping (guessed from field names); tags; **allow duplicates** (off by default).
+- **Scripts:** system scripts on/off (Oxford, Google Translate, ozdic collocations); **user scripts in JavaScript or TypeScript** (compiled with sucrase) running in a sandboxed iframe, network only through `api.fetch` to the `// @host` sites the user allowed; Test button; example script (Free Dictionary API). **Custom CSS** for the bubble.
+- Popup: link to all options.
+- Card template v4 (dictionary names above meanings when several dictionaries are used).
+- New permissions: `unlimitedStorage`, `offscreen`; optional host permissions (asked only for your scripts' hosts).
+
 ## 1.2.0 — 2026-10-24
 
 - Popup: the current site is shown at the top with a one-click **Block this site** / **Unblock** button (replaces the "On <site>" switch).

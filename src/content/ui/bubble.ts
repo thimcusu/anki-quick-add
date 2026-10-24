@@ -1,7 +1,8 @@
 // The popup shown after a double-click. Views:
 //   word view (EN→VI, with word-form tabs) · Vietnamese view (VI→EN chips)
 //   collocations view (ozdic.com) · card editor (edit, then save to Anki)
-import type { CardDraft, EnEntry, MeaningGroup, PartOfSpeech, ViEntry } from '../../shared/types.ts';
+import type { CardDraft, DictSection, EnEntry, MeaningGroup, PartOfSpeech, ViEntry } from '../../shared/types.ts';
+import type { Settings } from '../../shared/settings.ts';
 import { exampleContaining, POS_SHORT, uniqueLemmas } from '../../shared/forms.ts';
 import { api, logRemote, playWord } from '../messaging.ts';
 import { lookupWord } from '../lookup.ts';
@@ -36,12 +37,18 @@ export class Bubble {
   private side: 'below' | 'above' | null = null;
 
   /** `anchor` is the word's Range: its position is re-read on scroll and resize. */
-  constructor(private readonly origin: Origin, private readonly anchor: Range) {
+  private scriptSections: DictSection[] = []; // results of the user's scripts for the current word
+
+  constructor(private readonly origin: Origin, private readonly anchor: Range, private readonly opts: { settings: Settings; css: string }) {
     this.host = el('div');
     this.shadow = this.host.attachShadow({ mode: SHADOW_MODE });
     const sheet = new CSSStyleSheet();
     sheet.replaceSync(CSS);
     this.shadow.adoptedStyleSheets = [sheet];
+    if (opts.css) {
+      // The user's own CSS (options page), after ours so it wins. CSS can't run scripts.
+      try { const user = new CSSStyleSheet(); user.replaceSync(opts.css); this.shadow.adoptedStyleSheets = [sheet, user]; } catch { /* invalid CSS: ignore */ }
+    }
     this.box = el('div', { class: 'bubble' });
     this.shadow.append(this.box);
     document.documentElement.append(this.host);
@@ -132,8 +139,23 @@ export class Bubble {
 
   // ---------- English word view ----------
 
-  showWord(word: Word, family = word.f ?? []): void {
+  showWord(word: Word & { sections?: DictSection[] }, family = word.f ?? []): void {
+    const sameWord = this.word?.head === word.head;
     this.word = word;
+    if (!sameWord) this.scriptSections = [];
+    const scriptBox = el('div');
+    const fillScripts = (sections: DictSection[]): void => {
+      scriptBox.replaceChildren(...sections.flatMap((sec) => this.section(sec.name, sec.entry, true)));
+      this.position();
+    };
+    if (sameWord) fillScripts(this.scriptSections);
+    else {
+      void api.lookupScripts(word.head).then((sections) => {
+        if (this.word !== word || !sections.length) return;
+        this.scriptSections = sections;
+        fillScripts(sections);
+      });
+    }
     if (!this.clickedHead && !this.origin.vi) this.clickedHead = word.head;
     this.family = family.length ? family : (word.f ?? []);
     const back = this.origin.vi && button(`← ${this.origin.vi.phrase}`, () => { this.showVietnamese(); }, 'link');
@@ -145,20 +167,35 @@ export class Bubble {
           el('span', { class: 'ipa' }, word.i),
           button('🔊', () => { playWord(word.head); }, 'icon', 'Play'),
           el('span', { class: 'spacer' }),
-          el('span', { class: 'faint', title: 'Dictionary source' }, SOURCE_LABEL[word.s] ?? word.s),
+          el('span', { class: 'faint', title: 'Dictionary' }, word.sections?.[0]?.name ?? SOURCE_LABEL[word.s] ?? word.s),
           this.closeButton())),
       body: [
-        ...word.g.slice(0, 4).map((g) => this.meaningGroup(g, word.head)),
-        !word.g.length && el('div', { class: 'section muted' }, word.t ? 'Only technical meanings:' : 'No translation found (offline?).'),
+        ...this.dictionarySections(word),
+        scriptBox,
         this.wordForms(word.head),
-        this.technical(word, !word.g.length),
         this.contextLine(),
       ],
       footer: el('div', { class: 'row' },
-        word.head.includes(' ') ? '' : button('Collocations', () => { void this.showCollocations(); }, 'btn', 'Common word combinations from ozdic.com'),
+        word.head.includes(' ') || !this.opts.settings.system.collocations ? '' : button('Collocations', () => { void this.showCollocations(); }, 'btn', 'Common word combinations from ozdic.com'),
         el('span', { class: 'spacer' }),
         button('+ Anki', () => { this.showEditor({}); }, 'btn primary')),
     });
+  }
+
+  /** One block per dictionary (with its name when there are several); one dictionary keeps the plain layout. */
+  private dictionarySections(word: Word & { sections?: DictSection[] }): HTMLElement[] {
+    const sections = word.sections ?? [];
+    if (sections.length > 1) return sections.flatMap((sec) => this.section(sec.name, sec.entry, true));
+    return this.section('', word, false);
+  }
+
+  private section(name: string, entry: Word, titled: boolean): HTMLElement[] {
+    const body = [
+      ...entry.g.slice(0, 4).map((g) => this.meaningGroup(g, entry.head)),
+      !entry.g.length ? el('div', { class: 'section muted' }, entry.t ? 'Only technical meanings:' : 'No translation found (offline?).') : null,
+      this.technical(entry, !entry.g.length),
+    ].filter((x): x is HTMLElement => x !== null);
+    return titled ? [el('div', { class: 'dict' }, el('div', { class: 'dict-name' }, name), ...body)] : body;
   }
 
   /** English word family: the current word on top, the other forms below, each with IPA, audio and an example. */
@@ -176,7 +213,7 @@ export class Bubble {
     const pos = this.family.filter(([w]) => w === lemma).map(([, p]) => POS_SHORT[p] ?? p).join(' / ');
     const name = isCurrent
       ? el('b', {}, lemma)
-      : button(lemma, () => { lookupWord(lemma).then((r) => { if (r.found) this.showWord(r, this.family); }, (e: unknown) => { logRemote('error', 'lookup failed', e); }); }, 'link form-link', `Show “${lemma}”`);
+      : button(lemma, () => { lookupWord(lemma, this.opts.settings).then((r) => { if (r.found) this.showWord(r, this.family); }, (e: unknown) => { logRemote('error', 'lookup failed', e); }); }, 'link form-link', `Show “${lemma}”`);
     api.lookupEn(lemma).then((r) => {
       if (!r.found || r.head !== lemma) return;
       ipa.textContent = r.i;
@@ -243,7 +280,7 @@ export class Bubble {
 
   private async pickEnglish(candidate: string): Promise<void> {
     const word = candidate.replace(/^to\s+/i, '');
-    const r = await lookupWord(word);
+    const r = await lookupWord(word, this.opts.settings);
     const entry: Word = r.found ? r : { head: word.toLowerCase(), i: '', g: [], s: 'lv' };
     if (!r.found && /^to\s/i.test(candidate)) entry.g = [{ p: 'verb', m: [this.origin.vi?.phrase ?? ''] }];
     this.showWord(entry);
@@ -319,7 +356,8 @@ export class Bubble {
         pageTitle: clamp(document.title, 300),
         seenAs: clamp(vi?.phrase ?? '', 200),
         seenIn: vi ? clamp(this.origin.ctx.sentence, 2000) : '',
-        ...(word.s === 'ox' || word.s === 'gt' ? { fallback: word } : {}),
+        ...(word.s === 'ox' || word.s === 'gt' ? { fallback: { head: word.head, i: word.i, g: word.g, s: word.s, ...(word.f ? { f: word.f } : {}), ...(word.ox ? { ox: word.ox } : {}) } } : {}),
+        ...(this.scriptSections.length ? { extra: this.scriptSections.slice(0, 5).map((x) => ({ name: x.name, entry: { s: 'sc' as const, head: x.entry.head, i: x.entry.i, g: x.entry.g } })) } : {}),
       };
       const slow = setTimeout(() => { msg.textContent = 'Waiting for Anki… if a pop-up appeared in Anki, click "Yes".'; }, 4000);
       const res = await api.addCard(draft);

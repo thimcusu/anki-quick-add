@@ -32,6 +32,10 @@ export const CSS = `
 .label { color: var(--accent-text); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
 ul { margin: 2px 0 0; padding-left: 18px; } li { margin: 2px 0; }
 .example { color: var(--muted); font-style: italic; font-size: 12.5px; margin: 4px 0 0 18px; }
+.dict { margin-top: 14px; padding-top: 8px; border-top: 1px dashed var(--border); }
+.dict:first-child { border-top: 0; padding-top: 0; }
+.dict-name { font-size: 11px; font-weight: 600; color: var(--muted); }
+.dict .section { margin-top: 6px; }
 .context { margin-top: 12px; padding: 8px 10px; background: var(--surface); border-radius: 10px; color: var(--muted); font-size: 12.5px; }
 button { font: inherit; cursor: pointer; color: inherit; background: none; border: 0; }
 .btn { border: 1px solid var(--border); border-radius: 8px; padding: 5px 12px; font-weight: 500; background: var(--bg); }

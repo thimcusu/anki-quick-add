@@ -1,6 +1,7 @@
 // Typed wrappers around chrome.runtime.sendMessage, with timeouts so the UI
 // never hangs, and a remote logger that writes to the extension's log.
-import type { CardDraft, CollocationResponse, EnLookup, LogLevel, Result, ViLookup } from '../shared/types.ts';
+import type { CardDraft, CollocationResponse, DictSection, EnLookup, LogLevel, Result, ViLookup } from '../shared/types.ts';
+import { type Accent, ttsUrl } from '../shared/settings.ts';
 
 const SAVE_TIMEOUT_MS = 90_000; // includes waiting for the one-time permission click in Anki
 const LOOKUP_TIMEOUT_MS = 20_000;
@@ -53,6 +54,16 @@ async function oxford(word: string): Promise<{ ok: true; html: string; url: stri
   return isObject(r) && typeof r.ok === 'boolean' ? (r as { ok: true; html: string; url: string }) : { ok: false, msg: 'No answer from the extension.' };
 }
 
+/** Results of the user's dictionary scripts (slow: network); never rejects. */
+async function lookupScripts(word: string): Promise<DictSection[]> {
+  try {
+    const r = await send<unknown>({ type: 'lookupScripts', word }, 25_000);
+    return Array.isArray(r) ? (r as DictSection[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 async function translate(texts: string[]): Promise<string[]> {
   const r = await send<unknown>({ type: 'translate', texts });
   return Array.isArray(r) ? r.map((x) => (typeof x === 'string' ? x : '')) : texts.map(() => '');
@@ -63,6 +74,7 @@ export const api = {
   oxford,
   translate,
   lookupVi,
+  lookupScripts,
   collocations,
   addCard,
   blockSite: async (): Promise<Result> => {
@@ -72,9 +84,10 @@ export const api = {
   speak: (text: string) => send<undefined>({ type: 'speak', text }),
 };
 
-const TTS_URL = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=';
+let accent: Accent = 'us';
+export function setAccent(a: Accent): void { accent = a; }
 
 /** Play Google's voice; fall back to the system voice if the page blocks media. */
 export function playWord(text: string): void {
-  new Audio(TTS_URL + encodeURIComponent(text)).play().catch(() => { void api.speak(text).catch(() => undefined); });
+  new Audio(ttsUrl(text, accent)).play().catch(() => { void api.speak(text).catch(() => undefined); });
 }

@@ -21,7 +21,7 @@ export interface EnEntry {
   g: MeaningGroup[];
   t?: TechSection;
   f?: [string, PartOfSpeech][]; // word family, first item = the word itself
-  s: 'sk' | 'lv' | 'pd' | 'ox' | 'gt'; // source: offline dictionaries, 'ox' = Oxford online fallback, 'gt' = Google Translate (phrases)
+  s: 'sk' | 'lv' | 'pd' | 'ox' | 'gt' | 'im' | 'sc'; // source: built-in offline data, 'ox' Oxford, 'gt' Google Translate, 'im' imported file, 'sc' user script
   ox?: OxfordInfo;
 }
 
@@ -40,7 +40,10 @@ export interface ViEntry {
   t?: [string, string[]][]; // [field, english terms]
 }
 
-export type EnLookup = ({ found: true } & EnEntry & { head: string }) | { found: false; head: string };
+/** One dictionary's result, shown as its own section in the bubble. */
+export interface DictSection { id: string; name: string; entry: EnEntry & { head: string } }
+
+export type EnLookup = ({ found: true } & EnEntry & { head: string; sections?: DictSection[] }) | { found: false; head: string };
 export type ViLookup = ({ found: true } & ViEntry & { head: string }) | { found: false; head: string };
 
 /** A collocation group parsed from ozdic.com. */
@@ -69,6 +72,8 @@ export interface CardDraft {
   seenIn: string; // original page sentence (Vietnamese pages)
   /** Entry from the Oxford fallback when the word isn't in the offline dictionary. */
   fallback?: EnEntry & { head: string };
+  /** Results of the user's dictionary scripts shown in the bubble (validated again in the service worker). */
+  extra?: { name: string; entry: EnEntry & { head: string } }[];
 }
 
 export interface Result {
@@ -81,6 +86,7 @@ export type ContentRequest =
   | { type: 'lookupEn'; word: string }
   | { type: 'lookupVi'; phrases: string[] }
   | { type: 'collocations'; word: string }
+  | { type: 'lookupScripts'; word: string }
   | { type: 'oxford'; word: string }
   | { type: 'translate'; texts: string[] }
   | { type: 'addCard'; card: CardDraft }
@@ -91,6 +97,10 @@ export type ContentRequest =
 /** Messages from the extension's own pages (popup, options). */
 export type PageRequest =
   | { type: 'deckNames' }
+  | { type: 'ankiInfo' }
+  | { type: 'modelFieldNames'; model: string }
+  | { type: 'scriptFetch'; scriptId: string; url: string }
+  | { type: 'testScript'; scriptId: string; word: string }
   | { type: 'getLogs' }
   | { type: 'clearLogs' };
 
