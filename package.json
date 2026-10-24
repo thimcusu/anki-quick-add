@@ -1,0 +1,27 @@
+{
+  "name": "anki-quick-add",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Double-click English or Vietnamese words on any page and add English vocabulary to Anki.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:data": "node scripts/build.mjs --data",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "node --test --experimental-strip-types tests/*.test.ts",
+    "security": "npm audit --audit-level=moderate && npm run lint",
+    "check": "npm run typecheck && npm run lint && npm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.1",
+    "@types/chrome": "0.3.6",
+    "@types/node": "^22.20.5",
+    "esbuild": "0.28.2",
+    "eslint": "9.39.1",
+    "eslint-plugin-no-unsanitized": "4.1.5",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0"
+  }
+}

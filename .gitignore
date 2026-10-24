@@ -1,0 +1,9 @@
+node_modules/
+dist/
+dist-test/
+*.crx
+*.pem
+.DS_Store
+# Dictionary data: built locally, not redistributed (see README → Data sources)
+data/
+resources/
