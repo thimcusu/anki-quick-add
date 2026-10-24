@@ -81,7 +81,9 @@ export async function renderServicesTab(root: HTMLElement): Promise<void> {
     const info = await chrome.runtime.sendMessage<object, AnkiInfo | undefined>({ type: 'ankiInfo' });
     if (!info?.ok) {
       conn.className = 'status err';
-      conn.textContent = `Not connected: ${info?.msg ?? 'no answer.'} Open Anki (with AnkiConnect) and click Retry.`;
+      conn.textContent = info?.msg === 'Invalid request.'
+        ? 'The extension was updated but not reloaded: open chrome://extensions, click ↻ on Anki Quick Add, then reopen this page.'
+        : `Not connected: ${info?.msg ?? 'no answer.'} Open Anki (with AnkiConnect) and click Retry.`;
     } else {
       conn.className = 'hint ok';
       conn.textContent = `Connected · AnkiConnect version ${info.version}`;

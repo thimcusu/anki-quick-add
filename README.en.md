@@ -264,10 +264,10 @@ Safety: scripts run in a separate **sandboxed** page — no access to the extens
 
 | Setting | Meaning |
 |---|---|
-| *site name* + **Block this site** / **Unblock** | One click to turn the extension off (or back on) for the current site |
 | Enabled | Turn the whole extension on/off |
 | Mouse (double-click, select) | When off, only the hotkey works |
 | Deck, Tags | Anki deck and tags for new cards |
+| **On** *site name* | Switch: off = the extension does nothing on the current site |
 | **All options…** | Opens the full options page |
 
 **The options page** (from the popup, or `chrome://extensions` → Anki Quick Add → Details → Extension options) has four tabs:
@@ -287,7 +287,7 @@ Safety: scripts run in a separate **sandboxed** page — no access to the extens
 - `https://example.com/page` — full URLs work too
 - `192.168.1.10:8080` — hosts with a port
 
-Sites are also added when you click **⊘** in the bubble or **Block this site** in the popup.
+Sites are also added when you click **⊘** in the bubble or switch off **On** *site name* in the popup.
 
 **Custom CSS** (Scripts tab): applied to the lookup bubble after the built-in styles, e.g. `.bubble { width: 460px; font-size: 15px; }`. Main classes: `.bubble .header .body .footer .word .ipa .label .section .example .dict .btn .chip`.
 

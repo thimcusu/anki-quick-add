@@ -24,29 +24,15 @@ async function currentTabUrl(): Promise<string> {
   return tab?.url ?? '';
 }
 
-/** Popup: the current site with a one-click "Block this site" / "Unblock" button. */
-async function siteCard(s: Settings, save: (patch: Partial<Settings>) => void): Promise<HTMLElement | null> {
+/** Popup: a switch for the current site — off adds it to the blocklist, on removes every pattern matching this page. */
+async function siteRow(s: Settings, save: (patch: Partial<Settings>) => void): Promise<HTMLElement | null> {
   const url = await currentTabUrl().catch(() => '');
   const site = siteOf(url);
   if (!site) return null;
-  const card = el('div', { class: 'site-card' });
-  const render = (): void => {
-    const blocked = isBlocked(url, s.blocklist);
-    const button = el('button', { class: blocked ? 'btn' : 'btn danger', type: 'button' }, blocked ? 'Unblock' : 'Block this site');
-    button.addEventListener('click', () => {
-      // Blocking adds the site; unblocking removes every pattern that matches this page.
-      s.blocklist = blocked ? s.blocklist.filter((p) => !isBlocked(url, [p])) : [...s.blocklist, site];
-      save({ blocklist: s.blocklist });
-      render();
-    });
-    card.className = blocked ? 'site-card blocked' : 'site-card';
-    card.replaceChildren(
-      el('div', { class: 'site' }, el('span', { class: 'site-name' }, site),
-        el('span', { class: 'hint' }, blocked ? 'Turned off on this site' : 'Active on this site')),
-      button);
-  };
-  render();
-  return card;
+  return row(`On ${site}`, 'Off: the extension does nothing on this site.', toggle(!isBlocked(url, s.blocklist), (on) => {
+    s.blocklist = on ? s.blocklist.filter((p) => !isBlocked(url, [p])) : [...s.blocklist, site];
+    save({ blocklist: s.blocklist });
+  }));
 }
 
 /** Options page: the whole blocklist, one pattern per line. */
@@ -95,13 +81,13 @@ export async function renderSettings(root: HTMLElement): Promise<void> {
     save({ tags: list });
   });
 
-  const site = await siteCard(s, save);
+  const site = await siteRow(s, save);
   root.append(
-    ...(site ? [site] : []),
     row('Enabled', null, toggle(s.enabled, (v) => { save({ enabled: v }); })),
     row('Mouse (double-click, select)', hotkey, toggle(s.mouse, (v) => { save({ mouse: v }); })),
     el('div', { class: 'row stack' }, el('span', { class: 'label' }, 'Deck'), deck),
     el('div', { class: 'row stack' }, el('span', { class: 'label' }, 'Tags'), tags),
+    ...(site ? [site] : []),
     status,
   );
 }

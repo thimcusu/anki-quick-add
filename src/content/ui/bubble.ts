@@ -114,7 +114,7 @@ export class Bubble {
       button('✕', () => { this.close(); }, 'icon', 'Close (Esc)'));
   }
 
-  /** Ask before adding this site to the blocklist (undo: toolbar icon → "Unblock", or the options page). */
+  /** Ask before adding this site to the blocklist (undo: toolbar icon → "On <site>" switch, or the options page). */
   private confirmBlock(): void {
     const msg = el('span', { class: 'msg' });
     const back = (): void => { if (this.word) this.showWord(this.word, this.family); else this.showVietnamese(); };
@@ -130,7 +130,7 @@ export class Bubble {
         button('✕', () => { this.close(); }, 'icon', 'Close (Esc)')),
       body: [
         el('div', { class: 'section' }, 'Turn Anki Quick Add off on this site? Double-click and the hotkey will do nothing here.'),
-        el('div', { class: 'section muted' }, 'To turn it back on: click the extension icon on this site → Unblock, or edit the list in the extension options.'),
+        el('div', { class: 'section muted' }, 'To turn it back on: click the extension icon on this site and switch it on, or edit the list in the extension options.'),
       ],
       footer: el('div', { class: 'row' }, msg, el('span', { class: 'spacer' }), button('Cancel', back, 'btn'), block),
     });

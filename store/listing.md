@@ -90,7 +90,7 @@ Open source, collects no data: <GitHub URL>
 
 | Permission | Justification |
 |---|---|
-| `activeTab` | When the user clicks the toolbar icon, the popup reads the current tab's address to show the site with its "Block this site" / "Unblock" button. |
+| `activeTab` | When the user clicks the toolbar icon, the popup reads the current tab's address to show the "On <this site>" switch. |
 | `storage` | Saves the user's settings (on/off, deck, tags, disabled sites) and a local error log. |
 | `tts` | Fallback pronunciation with the system voice when online audio can't play on a page. |
 | `unlimitedStorage` | Dictionaries the user imports (often 100,000+ entries, tens of MB) are stored locally in IndexedDB. |

@@ -41,12 +41,6 @@ input[type=text]:focus, select:focus { border-color: var(--accent); box-shadow: 
 .btn:hover { background: var(--surface); }
 .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; font-weight: 600; }
 .btn.danger:hover { filter: brightness(.92); }
-.site-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; margin-bottom: 6px; border-radius: 10px; background: var(--surface); }
-.site-card.blocked { background: rgba(220,38,38,.08); }
-.site-card .site { min-width: 0; }
-.site-card .site-name { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.site-card .hint { display: block; color: var(--muted); font-size: 12px; }
-.site-card .btn { flex: none; }
 .toolbar { display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; align-items: center; }
 .logs { width: 100%; border-collapse: collapse; font-size: 12px; }
 .logs td { border-top: 1px solid var(--border); padding: 5px 6px; vertical-align: top; }
@@ -94,3 +88,6 @@ pre.output:empty { display: none; }
 .footer-link { margin-top: 10px; font-size: 12px; }
 .footer-link a { text-decoration: none; }
 .panel { padding-bottom: 30px; }
+
+/* Option pickers next to a label all have the same width */
+.row:not(.stack) > select { flex: 0 0 300px; width: 300px; max-width: 55%; }

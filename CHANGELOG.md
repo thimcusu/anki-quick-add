@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1 — 2026-10-24
+
+- Popup: the current site is a normal **On <site>** switch, at the bottom (above "All options").
+- Options: drop-downs next to a label (Hotkey, Pronunciation) have the same width.
+- Services tab: clear message when the extension was updated but not reloaded ("Invalid request").
+
 ## 2.0.0 — 2026-10-24
 
 Options page rebuilt with tabs, like Online Dictionary Helper: **Extension · Services · Scripts · Logs**.

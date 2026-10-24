@@ -264,10 +264,10 @@ An toàn: script chạy trong một trang **sandbox** riêng — không truy c�
 
 | Mục | Ý nghĩa |
 |---|---|
-| *tên trang* + **Block this site** / **Unblock** | Tắt / bật lại tiện ích trên trang đang xem chỉ với một cú nhấp |
 | Enabled | Bật / tắt toàn bộ tiện ích |
 | Mouse (double-click, select) | Tắt thì chỉ phím tắt hoạt động |
 | Deck, Tags | Bộ thẻ Anki và nhãn cho thẻ mới |
+| **On** *tên trang* | Công tắc: tắt để tiện ích không làm gì trên trang đang xem |
 | **All options…** | Mở trang Options đầy đủ |
 
 **Trang Options** (từ popup, hoặc `chrome://extensions` → Anki Quick Add → Details → Extension options) có 4 tab:
@@ -287,7 +287,7 @@ An toàn: script chạy trong một trang **sandbox** riêng — không truy c�
 - `https://example.com/page` — dán nguyên địa chỉ cũng được
 - `192.168.1.10:8080` — địa chỉ có cổng
 
-Trang cũng được thêm khi bạn bấm **⊘** trong bong bóng hoặc **Block this site** trong popup.
+Trang cũng được thêm khi bạn bấm **⊘** trong bong bóng hoặc tắt công tắc **On** *tên trang* trong popup.
 
 **Custom CSS** (tab Scripts): CSS áp dụng cho bong bóng tra từ, sau CSS mặc định. Ví dụ: `.bubble { width: 460px; font-size: 15px; }`. Các class chính: `.bubble .header .body .footer .word .ipa .label .section .example .dict .btn .chip`.
 
