@@ -106,7 +106,7 @@ Trong bong bóng:
 Mỗi thẻ dùng loại thẻ **`EN-VI Vocab`**:
 
 - **Mặt trước:** từ, phiên âm, từ loại, âm thanh của từ (tự phát), **ô để gõ đáp án**, câu ví dụ (từ được tô sáng) với đường link bài báo ngay bên dưới, các dạng từ khác kèm ví dụ.
-- **Mặt sau:** so sánh đáp án bạn gõ với đáp án đúng, đáp án, câu ví dụ kèm âm thanh, giải thích (nếu có), tất cả các nghĩa, các dạng từ (có nút ▶ phát âm từng dạng), nghĩa chuyên ngành.
+- **Mặt sau:** so sánh đáp án bạn gõ với đáp án đúng (đáp án không lặp lại lần nữa), câu ví dụ kèm âm thanh, giải thích (nếu có), tất cả các nghĩa, các dạng từ (có nút ▶ phát âm từng dạng), nghĩa chuyên ngành.
 
 ![Mặt trước và mặt sau của thẻ](store/screenshot-3.png)
 

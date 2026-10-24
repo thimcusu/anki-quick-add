@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.2 — 2026-10-24
+
+- Card back: the Vietnamese answer is no longer shown twice — Anki's typed-answer comparison already shows it (template v5; the note type in Anki is updated on the next save).
+
 ## 2.0.1 — 2026-10-24
 
 - Popup: the current site is a normal **On <site>** switch, at the bottom (above "All options").

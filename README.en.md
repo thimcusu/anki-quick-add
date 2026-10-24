@@ -106,7 +106,7 @@ In the bubble:
 Cards use the note type **`EN-VI Vocab`**:
 
 - **Front:** word, IPA, part of speech, word audio (autoplay), **a box to type the answer**, the sentence (word highlighted) with the article link right under it, the other word forms with examples.
-- **Back:** your typed answer compared with the correct one, the answer, the sentence with its audio, explanation (if any), all meanings, word forms (▶ for each), technical meanings.
+- **Back:** your typed answer compared with the correct one (the answer isn't repeated), the sentence with its audio, explanation (if any), all meanings, word forms (▶ for each), technical meanings.
 
 ![Front and back of a card](store/screenshot-3.png)
 

@@ -20,7 +20,7 @@
 
 export const MODEL_NAME = 'EN-VI Vocab';
 /** Bump when templates or CSS change; the extension then updates the note type in Anki. */
-export const MODEL_VERSION = 4;
+export const MODEL_VERSION = 5;
 
 export const MODEL_FIELDS = [
   'Word', 'IPA', 'POS', 'Audio', 'Answer', 'Sentence', 'SentenceSound',
@@ -44,9 +44,9 @@ const HEADER = `
   <div class="meta">{{#IPA}}<span class="ipa">{{IPA}}</span>{{/IPA}}{{#POS}}<span class="pos">{{POS}}</span>{{/POS}}{{#Level}}<span class="level">{{Level}}</span>{{/Level}}<span class="audio">{{Audio}}</span></div>
 </div>`;
 
-// Front: type the Vietnamese meaning. Back: Anki shows what you typed vs. the answer.
+// Front: type the Vietnamese meaning. Back: Anki's comparison of what you typed with the
+// answer already shows the answer, so it isn't repeated.
 const TYPE_ANSWER = `{{#Answer}}<div class="type-answer">{{type:Answer}}</div>{{/Answer}}`;
-const ANSWER = `{{#Answer}}<div class="answer-wrap"><div class="answer">{{Answer}}</div></div>{{/Answer}}`;
 
 // The sentence plays on the back only (native Anki sound with replay button).
 const SENTENCE_FRONT = `{{#Sentence}}<blockquote class="sentence">{{Sentence}}</blockquote>{{/Sentence}}`;
@@ -73,7 +73,6 @@ ${TYPE_HINT}`;
 export const BACK = `<div class="card-body back">
 ${HEADER}
 ${TYPE_ANSWER}
-${ANSWER}
 ${SENTENCE_BACK}
 ${SOURCE}
 {{#Explanation}}<div class="section"><div class="label">Explanation</div><div class="explanation">{{Explanation}}</div></div>{{/Explanation}}
