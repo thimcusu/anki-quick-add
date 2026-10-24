@@ -1,7 +1,7 @@
 // Settings form shared by the popup (click the toolbar icon) and the options page.
 import { el } from '../content/ui/dom.ts';
 import { type Settings, hotkeyLabel, loadSettings, parseTags, saveSettings } from '../shared/settings.ts';
-import { DEFAULT_BLOCKLIST, isBlocked, parseBlocklist, siteOf } from '../shared/blocklist.ts';
+import { isBlocked, parseBlocklist, siteOf } from '../shared/blocklist.ts';
 
 type DeckResponse = { ok: true; decks: string[] } | { ok: false; msg: string };
 
@@ -22,18 +22,29 @@ async function currentTabUrl(): Promise<string> {
   return tab?.url ?? '';
 }
 
-/** Popup: one switch for the current site. */
-async function siteRow(s: Settings, save: (patch: Partial<Settings>) => void): Promise<HTMLElement | null> {
+/** Popup: the current site with a one-click "Block this site" / "Unblock" button. */
+async function siteCard(s: Settings, save: (patch: Partial<Settings>) => void): Promise<HTMLElement | null> {
   const url = await currentTabUrl().catch(() => '');
   const site = siteOf(url);
   if (!site) return null;
-  const on = !isBlocked(url, s.blocklist);
-  return row(`On ${site}`, null, toggle(on, (enable) => {
-    // Turning it off adds the site; turning it on removes every pattern that matches this page.
-    const list = enable ? s.blocklist.filter((p) => !isBlocked(url, [p])) : [...s.blocklist, site];
-    s.blocklist = list;
-    save({ blocklist: list });
-  }));
+  const card = el('div', { class: 'site-card' });
+  const render = (): void => {
+    const blocked = isBlocked(url, s.blocklist);
+    const button = el('button', { class: blocked ? 'btn' : 'btn danger', type: 'button' }, blocked ? 'Unblock' : 'Block this site');
+    button.addEventListener('click', () => {
+      // Blocking adds the site; unblocking removes every pattern that matches this page.
+      s.blocklist = blocked ? s.blocklist.filter((p) => !isBlocked(url, [p])) : [...s.blocklist, site];
+      save({ blocklist: s.blocklist });
+      render();
+    });
+    card.className = blocked ? 'site-card blocked' : 'site-card';
+    card.replaceChildren(
+      el('div', { class: 'site' }, el('span', { class: 'site-name' }, site),
+        el('span', { class: 'hint' }, blocked ? 'Turned off on this site' : 'Active on this site')),
+      button);
+  };
+  render();
+  return card;
 }
 
 /** Options page: the whole blocklist, one pattern per line. */
@@ -45,8 +56,8 @@ function blocklistEditor(s: Settings, save: (patch: Partial<Settings>) => void):
     area.value = list.join('\n');
     save({ blocklist: list });
   });
-  const reset = el('button', { class: 'btn', type: 'button' }, 'Reset to defaults');
-  reset.addEventListener('click', () => { area.value = DEFAULT_BLOCKLIST.join('\n'); save({ blocklist: DEFAULT_BLOCKLIST }); });
+  const reset = el('button', { class: 'btn', type: 'button' }, 'Clear list');
+  reset.addEventListener('click', () => { area.value = ''; save({ blocklist: [] }); });
   return el('div', { class: 'row stack' },
     el('span', { class: 'label' }, 'Disabled on these sites',
       el('span', { class: 'hint' }, 'One per line: example.com (with subdomains), *.example.com, example.com/path or a full URL.')),
@@ -81,9 +92,11 @@ export async function renderSettings(root: HTMLElement, page: 'popup' | 'options
     save({ tags: list });
   });
 
+  const site = page === 'popup' ? await siteCard(s, save) : null;
   root.append(
+    ...(site ? [site] : []),
     row('Enabled', null, toggle(s.enabled, (v) => { save({ enabled: v }); })),
-    ...(page === 'popup' ? [await siteRow(s, save)].filter((x): x is HTMLElement => x !== null) : []),
+    
     row('Mouse (double-click)', hotkey, toggle(s.mouse, (v) => { save({ mouse: v }); })),
     el('div', { class: 'row stack' }, el('span', { class: 'label' }, 'Deck'), deck),
     el('div', { class: 'row stack' }, el('span', { class: 'label' }, 'Tags'), tags),

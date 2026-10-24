@@ -207,7 +207,7 @@ Tiện ích luôn lưu vào loại thẻ `EN-VI Vocab` và **ghi đè mẫu th�
 | Mục | Ý nghĩa |
 |---|---|
 | Enabled | Bật / tắt toàn bộ tiện ích |
-| On *trang này* | Bật / tắt riêng trang web đang xem |
+| *tên trang* + **Block this site** / **Unblock** | Tắt / bật lại tiện ích trên trang web đang xem chỉ với một cú nhấp |
 | Mouse (double-click) | Tắt thì chỉ phím tắt ⌥A / Alt+A hoạt động |
 | Deck | Bộ thẻ Anki để lưu (danh sách lấy từ Anki) |
 | Tags | Nhãn gắn vào mỗi thẻ, cách nhau bằng dấu phẩy |
@@ -222,7 +222,7 @@ Tiện ích luôn lưu vào loại thẻ `EN-VI Vocab` và **ghi đè mẫu th�
   - `192.168.1.10:8080` — địa chỉ có cổng
 - **Record detailed logs** và **Logs** — để tìm lỗi.
 
-Trang được thêm vào danh sách khi bạn bấm **⊘** trong bong bóng hoặc tắt *On trang này* trong popup.
+Trang được thêm vào danh sách khi bạn bấm **⊘** trong bong bóng hoặc **Block this site** trong popup.
 
 ## Quyền riêng tư
 

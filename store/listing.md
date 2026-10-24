@@ -85,7 +85,7 @@ Open source, collects no data: <GitHub URL>
 
 | Permission | Justification |
 |---|---|
-| `activeTab` | When the user clicks the toolbar icon, the popup reads the current tab's address to show and change the "On this site" switch. |
+| `activeTab` | When the user clicks the toolbar icon, the popup reads the current tab's address to show the site with its "Block this site" / "Unblock" button. |
 | `storage` | Saves the user's settings (on/off, deck, tags, disabled sites) and a local error log. |
 | `tts` | Fallback pronunciation with the system voice when online audio can't play on a page. |
 | Host `http://127.0.0.1:8765/*` | Talks to the AnkiConnect add-on of the user's own Anki application to list decks and add the flashcards the user saves. |

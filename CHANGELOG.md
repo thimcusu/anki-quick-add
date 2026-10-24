@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0 — 2026-10-24
+
+- Popup: the current site is shown at the top with a one-click **Block this site** / **Unblock** button (replaces the "On <site>" switch).
+- Options: "Reset to defaults" for the blocklist is now **Clear list** (there are no default blocked sites).
+- Company hostnames removed from the tests and from the git history (v1.0.0 and v1.1.0 were rewritten).
+
 ## 1.1.0 — 2026-10-24
 
 - **Turn off on this site from the bubble** (⊘ → confirm). The site is added to the blocklist; undo from the toolbar popup or the options page.

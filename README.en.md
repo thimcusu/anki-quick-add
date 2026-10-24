@@ -207,7 +207,7 @@ The extension always saves to `EN-VI Vocab` and **overwrites its templates and C
 | Setting | Meaning |
 |---|---|
 | Enabled | Turn the whole extension on/off |
-| On *this site* | Turn it on/off for the current site |
+| *site name* + **Block this site** / **Unblock** | One click to turn the extension off (or back on) for the current site |
 | Mouse (double-click) | When off, only the ⌥A / Alt+A hotkey works |
 | Deck | Anki deck for new cards (list from Anki) |
 | Tags | Tags added to every card, comma-separated |
@@ -222,7 +222,7 @@ The extension always saves to `EN-VI Vocab` and **overwrites its templates and C
   - `192.168.1.10:8080` — hosts with a port
 - **Record detailed logs** and **Logs** — for troubleshooting.
 
-Sites are added to the list when you click **⊘** in the bubble or switch off *On this site* in the popup.
+Sites are added to the list when you click **⊘** in the bubble or **Block this site** in the popup.
 
 ## Privacy
 
